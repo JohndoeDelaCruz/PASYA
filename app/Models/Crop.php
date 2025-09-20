@@ -26,6 +26,15 @@ class Crop extends Model
         'status',
         'expected_yield_kg',
         'actual_yield_kg',
+        // New fields for agricultural statistics data
+        'municipality',
+        'farm_type',
+        'year',
+        'crop_name',
+        'area_planted',
+        'area_harvested',
+        'production_mt',
+        'productivity_mt_ha',
     ];
 
     /**

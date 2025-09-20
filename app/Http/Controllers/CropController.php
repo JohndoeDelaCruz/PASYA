@@ -38,20 +38,53 @@ class CropController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'farmer_id' => 'required|exists:tblFarmers,farmerID',
-            'name' => 'required|string|max:255',
-            'variety' => 'nullable|string|max:255',
-            'planting_date' => 'required|date',
-            'expected_harvest_date' => 'nullable|date|after:planting_date',
-            'area_hectares' => 'required|numeric|min:0.01|max:9999.99',
-            'description' => 'nullable|string|max:1000',
-            'expected_yield_kg' => 'nullable|numeric|min:0|max:99999999.99',
-        ]);
+        // Check if this is the new modal format (agricultural statistics data) or old format
+        if ($request->has('municipality') || $request->has('crop_name')) {
+            // New modal format - agricultural statistics data
+            $validated = $request->validate([
+                'municipality' => 'required|string|max:255',
+                'farm_type' => 'required|string|in:irrigated,rainfed,upland,lowland',
+                'year' => 'required|integer|min:2000|max:2030',
+                'crop_name' => 'required|string|max:255',
+                'area_planted' => 'required|numeric|min:0.01|max:99999.99',
+                'area_harvested' => 'required|numeric|min:0.01|max:99999.99',
+                'production' => 'required|numeric|min:0.01|max:99999999.99',
+                'productivity' => 'nullable|numeric|min:0|max:99999.99',
+            ]);
 
-        Crop::create($validated);
+            // Map form field names to database field names
+            $cropData = [
+                'municipality' => $validated['municipality'],
+                'farm_type' => $validated['farm_type'],
+                'year' => $validated['year'],
+                'crop_name' => $validated['crop_name'],
+                'area_planted' => $validated['area_planted'],
+                'area_harvested' => $validated['area_harvested'],
+                'production_mt' => $validated['production'],
+                'productivity_mt_ha' => $validated['productivity'],
+                'status' => 'planted', // Default status
+            ];
 
-        return redirect()->route('admin.crops.index')->with('success', 'Crop added successfully!');
+            Crop::create($cropData);
+
+            return redirect()->route('admin.crops.index')->with('success', 'Crop data added successfully!');
+        } else {
+            // Original format - individual farmer crop tracking
+            $validated = $request->validate([
+                'farmer_id' => 'required|exists:tblFarmers,farmerID',
+                'name' => 'required|string|max:255',
+                'variety' => 'nullable|string|max:255',
+                'planting_date' => 'required|date',
+                'expected_harvest_date' => 'nullable|date|after:planting_date',
+                'area_hectares' => 'required|numeric|min:0.01|max:9999.99',
+                'description' => 'nullable|string|max:1000',
+                'expected_yield_kg' => 'nullable|numeric|min:0|max:99999999.99',
+            ]);
+
+            Crop::create($validated);
+
+            return redirect()->route('admin.crops.index')->with('success', 'Crop added successfully!');
+        }
     }
 
     /**
