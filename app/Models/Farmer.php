@@ -131,4 +131,12 @@ class Farmer extends Authenticatable
     {
         return null; // Farmers don't have email in current schema
     }
+
+    /**
+     * Get the crops for the farmer.
+     */
+    public function crops()
+    {
+        return $this->hasMany(Crop::class, 'farmer_id', 'farmerID');
+    }
 }

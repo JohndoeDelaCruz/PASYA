@@ -43,4 +43,14 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::post('/farmers/{id}/toggle-status', [AdminController::class, 'toggleFarmerStatus'])->name('farmers.toggle-status');
     Route::delete('/farmers/{id}', [AdminController::class, 'deleteFarmer'])->name('farmers.delete');
     Route::post('/farmers/batch-import', [AdminController::class, 'batchImportFarmers'])->name('farmers.batch-import');
+    
+    // Crop management routes
+    Route::resource('crops', App\Http\Controllers\CropController::class);
+    
+    // Crop import/export routes
+    Route::get('/crops/import-export', [App\Http\Controllers\CropController::class, 'importExport'])->name('crops.import-export');
+    Route::post('/crops/import', [App\Http\Controllers\CropController::class, 'import'])->name('crops.import');
+    Route::get('/crops/export', [App\Http\Controllers\CropController::class, 'export'])->name('crops.export');
+    Route::get('/crops/template', [App\Http\Controllers\CropController::class, 'downloadTemplate'])->name('crops.template');
+    Route::get('/crops/{crop}/export', [App\Http\Controllers\CropController::class, 'exportSingle'])->name('crops.export-single');
 });
