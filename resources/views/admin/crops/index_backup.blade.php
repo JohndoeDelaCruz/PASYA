@@ -49,176 +49,135 @@
                     </div>
                 @endif
 
-                <!-- Search and Filters -->
-                <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-                    <div class="flex items-center space-x-4">
-                        <div class="flex-1">
-                            <input type="text" id="searchInput" placeholder="Enter search item..." class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <select id="viewFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="">View</option>
-                                <option value="all">All</option>
-                                <option value="recent">Recent</option>
-                            </select>
-                        </div>
-                        <div>
-                            <select id="municipalityFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="">Municipality</option>
-                                @foreach($crops->pluck('municipality')->filter()->unique()->sort() as $municipality)
-                                    <option value="{{ $municipality }}">{{ $municipality }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <select id="cropFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <option value="">Crop</option>
-                                @foreach($crops->pluck('crop_name')->filter()->unique()->sort() as $crop)
-                                    <option value="{{ $crop }}">{{ $crop }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <button id="resetFilters" class="px-4 py-2 border border-gray-300 rounded-md text-sm hover:bg-gray-50 flex items-center space-x-2">
-                            <span>Reset</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                        <button class="p-2 border border-gray-300 rounded-md hover:bg-gray-50">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-
                 <!-- Crops Table -->
                 @if($crops->count() > 0)
                     <div class="bg-white rounded-lg shadow overflow-hidden">
                         <div class="overflow-x-auto">
-                            <table class="min-w-full">
-                                <thead class="bg-gray-50 border-b">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
                                     <tr>
-                                        <th class="px-6 py-3 text-left">
-                                            <input type="checkbox" id="selectAll" class="rounded">
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700">
-                                            Crop <svg class="w-3 h-3 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                                            </svg>
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700">
-                                            Municipality <svg class="w-3 h-3 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                                            </svg>
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700">
-                                            Year <svg class="w-3 h-3 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                                            </svg>
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700">
-                                            Area Planted (ha) <svg class="w-3 h-3 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                                            </svg>
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700">
-                                            Productivity (mt/ha) <svg class="w-3 h-3 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
-                                            </svg>
-                                        </th>
-                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Actions
-                                        </th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Crop</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location/Farmer</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type/Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Area</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Production</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year/Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white divide-y divide-gray-200" id="cropTableBody">
-                                    @forelse($crops as $crop)
-                                        <tr class="hover:bg-gray-50 crop-row" 
-                                            data-crop="{{ strtolower($crop->crop_name ?? $crop->name ?? '') }}"
-                                            data-municipality="{{ strtolower($crop->municipality ?? '') }}"
-                                            data-year="{{ $crop->year ?? '' }}">
-                                            <td class="px-6 py-4">
-                                                <input type="checkbox" class="rounded row-checkbox">
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    @foreach($crops as $crop)
+                                        <tr class="hover:bg-gray-50">
+                                            <!-- Crop Name -->
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <div class="flex items-center">
+                                                    <div>
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            {{ $crop->crop_name ?? $crop->name }}
+                                                        </div>
+                                                        @if($crop->variety)
+                                                            <div class="text-sm text-gray-500">{{ $crop->variety }}</div>
+                                                        @endif
+                                                    </div>
+                                                </div>
                                             </td>
-                                            <td class="px-6 py-4 text-sm font-medium text-gray-900">
-                                                {{ $crop->crop_name ?? $crop->name }}
+
+                                            <!-- Location/Farmer -->
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                @if($crop->municipality)
+                                                    <!-- Agricultural Statistics Data Format -->
+                                                    <div class="text-sm text-gray-900">{{ $crop->municipality }}</div>
+                                                    <div class="text-sm text-gray-500">Municipality</div>
+                                                @else
+                                                    <!-- Individual Farmer Format -->
+                                                    <div class="text-sm text-gray-900">{{ $crop->farmer->farmerName ?? 'N/A' }}</div>
+                                                    <div class="text-sm text-gray-500">{{ $crop->farmer->farmerLocation ?? '' }}</div>
+                                                @endif
                                             </td>
-                                            <td class="px-6 py-4 text-sm text-gray-900">
-                                                {{ $crop->municipality ?? 'N/A' }}
+
+                                            <!-- Type/Status -->
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                @if($crop->farm_type)
+                                                    <!-- Agricultural Statistics Data Format -->
+                                                    <div class="text-sm font-medium text-gray-900">{{ ucfirst($crop->farm_type) }}</div>
+                                                    <div class="text-sm text-gray-500">Farm Type</div>
+                                                @else
+                                                    <!-- Individual Farmer Format -->
+                                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                        @if($crop->status === 'planted') bg-blue-100 text-blue-800
+                                                        @elseif($crop->status === 'growing') bg-green-100 text-green-800
+                                                        @elseif($crop->status === 'harvested') bg-yellow-100 text-yellow-800
+                                                        @else bg-red-100 text-red-800
+                                                        @endif">
+                                                        {{ ucfirst($crop->status) }}
+                                                    </span>
+                                                @endif
                                             </td>
-                                            <td class="px-6 py-4 text-sm text-gray-900">
-                                                {{ $crop->year ?? ($crop->planting_date ? $crop->planting_date->format('Y') : 'N/A') }}
+
+                                            <!-- Area -->
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if($crop->area_planted && $crop->area_harvested)
+                                                    <!-- Agricultural Statistics Data Format -->
+                                                    <div>Planted: {{ number_format($crop->area_planted, 2) }} ha</div>
+                                                    <div class="text-xs text-gray-500">Harvested: {{ number_format($crop->area_harvested, 2) }} ha</div>
+                                                @else
+                                                    <!-- Individual Farmer Format -->
+                                                    {{ $crop->area_hectares ? number_format($crop->area_hectares, 2) . ' ha' : 'N/A' }}
+                                                @endif
                                             </td>
-                                            <td class="px-6 py-4 text-sm text-gray-900">
-                                                {{ $crop->area_planted ? number_format($crop->area_planted, 1) : ($crop->area_hectares ? number_format($crop->area_hectares, 1) : 'N/A') }}
+
+                                            <!-- Production -->
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if($crop->production_mt)
+                                                    <!-- Agricultural Statistics Data Format -->
+                                                    <div>{{ number_format($crop->production_mt, 2) }} mt</div>
+                                                    @if($crop->productivity_mt_ha)
+                                                        <div class="text-xs text-gray-500">{{ number_format($crop->productivity_mt_ha, 2) }} mt/ha</div>
+                                                    @endif
+                                                @else
+                                                    <!-- Individual Farmer Format -->
+                                                    {{ $crop->expected_yield_kg ? number_format($crop->expected_yield_kg, 0) . ' kg' : 'N/A' }}
+                                                @endif
                                             </td>
-                                            <td class="px-6 py-4 text-sm text-gray-900">
-                                                {{ $crop->productivity_mt_ha ? number_format($crop->productivity_mt_ha, 4) : 'N/A' }}
+
+                                            <!-- Year/Date -->
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                @if($crop->year)
+                                                    <!-- Agricultural Statistics Data Format -->
+                                                    <div class="font-medium">{{ $crop->year }}</div>
+                                                    <div class="text-xs text-gray-500">Year</div>
+                                                @else
+                                                    <!-- Individual Farmer Format -->
+                                                    <div>{{ $crop->planting_date ? $crop->planting_date->format('M d, Y') : 'N/A' }}</div>
+                                                    @if($crop->expected_harvest_date)
+                                                        <div class="text-xs text-gray-500">Harvest: {{ $crop->expected_harvest_date->format('M d, Y') }}</div>
+                                                    @endif
+                                                @endif
                                             </td>
-                                            <td class="px-6 py-4 text-sm">
-                                                <button class="text-gray-400 hover:text-gray-600">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
-                                                    </svg>
-                                                </button>
+
+                                            <!-- Actions -->
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div class="flex items-center space-x-2">
+                                                    <a href="{{ route('admin.crops.show', $crop) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                                                    <span class="text-gray-300">|</span>
+                                                    <a href="{{ route('admin.crops.edit', $crop) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                                    <span class="text-gray-300">|</span>
+                                                    <form action="{{ route('admin.crops.destroy', $crop) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this crop?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+                                                    </form>
+                                                </div>
                                             </td>
                                         </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
-                                                <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                                </svg>
-                                                <div class="text-lg font-medium mb-2">No crop data found</div>
-                                                <div class="text-sm">Start by adding crop data to the system.</div>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-
-
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
 
-                        <!-- Table Footer -->
-                        <div class="px-6 py-3 border-t bg-gray-50 flex items-center justify-between">
-                            <div class="text-sm text-gray-700">
-                                <span id="selectedCount">0</span> of <span id="totalCount">{{ $crops->count() }}</span> row(s) selected.
-                            </div>
-                            <div class="flex items-center space-x-4">
-                                <div class="text-sm text-gray-700">Rows per page</div>
-                                <select id="rowsPerPage" class="px-2 py-1 border border-gray-300 rounded text-sm">
-                                    <option value="10">10</option>
-                                    <option value="25">25</option>
-                                    <option value="50">50</option>
-                                </select>
-                                <div class="text-sm text-gray-700">
-                                    Page <span id="currentPage">1</span> of <span id="totalPages">{{ $crops->hasPages() ? $crops->lastPage() : 1 }}</span>
-                                </div>
-                                <div class="flex items-center space-x-1">
-                                    <button class="p-1 border border-gray-300 rounded hover:bg-gray-50">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
-                                        </svg>
-                                    </button>
-                                    <button class="p-1 border border-gray-300 rounded hover:bg-gray-50">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                                        </svg>
-                                    </button>
-                                    <button class="p-1 border border-gray-300 rounded hover:bg-gray-50">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                        </svg>
-                                    </button>
-                                    <button class="p-1 border border-gray-300 rounded hover:bg-gray-50">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
+                        <!-- Pagination -->
+                        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                            {{ $crops->links() }}
                         </div>
                     </div>
                 @else
@@ -504,104 +463,6 @@
                 <p class="text-green-600 text-sm font-medium">File selected successfully!</p>
             `;
         }
-
-        // Table functionality - Search, Filter, Selection
-        const searchInput = document.getElementById('searchInput');
-        const municipalityFilter = document.getElementById('municipalityFilter');
-        const cropFilter = document.getElementById('cropFilter');
-        const resetFiltersBtn = document.getElementById('resetFilters');
-        const selectAllCheckbox = document.getElementById('selectAll');
-        const selectedCountSpan = document.getElementById('selectedCount');
-
-        // Search and filter functionality
-        function filterTable() {
-            const searchTerm = searchInput.value.toLowerCase().trim();
-            const municipalityValue = municipalityFilter.value.toLowerCase().trim();
-            const cropValue = cropFilter.value.toLowerCase().trim();
-            const rows = document.querySelectorAll('.crop-row');
-            let visibleCount = 0;
-            
-            rows.forEach(row => {
-                const crop = (row.dataset.crop || '').toLowerCase();
-                const municipality = (row.dataset.municipality || '').toLowerCase();
-                const year = (row.dataset.year || '').toLowerCase();
-                
-                // Search in crop, municipality, and year
-                const matchesSearch = !searchTerm || 
-                    crop.includes(searchTerm) || 
-                    municipality.includes(searchTerm) || 
-                    year.includes(searchTerm);
-                
-                const matchesMunicipality = !municipalityValue || municipality.includes(municipalityValue);
-                const matchesCrop = !cropValue || crop.includes(cropValue);
-                
-                if (matchesSearch && matchesMunicipality && matchesCrop) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                    // Uncheck hidden rows
-                    const checkbox = row.querySelector('.row-checkbox');
-                    if (checkbox && checkbox.checked) {
-                        checkbox.checked = false;
-                    }
-                }
-            });
-            
-            // Update total count display
-            if (document.getElementById('totalCount')) {
-                document.getElementById('totalCount').textContent = visibleCount;
-            }
-            updateSelectedCount();
-        }
-
-        // Event listeners for filters
-        if (searchInput) searchInput.addEventListener('input', filterTable);
-        if (municipalityFilter) municipalityFilter.addEventListener('change', filterTable);
-        if (cropFilter) cropFilter.addEventListener('change', filterTable);
-
-        if (resetFiltersBtn) {
-            resetFiltersBtn.addEventListener('click', function() {
-                searchInput.value = '';
-                municipalityFilter.value = '';
-                cropFilter.value = '';
-                filterTable();
-            });
-        }
-
-        // Checkbox functionality
-        if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', function() {
-                const visibleCheckboxes = document.querySelectorAll('.crop-row:not([style*="display: none"]) .row-checkbox');
-                visibleCheckboxes.forEach(checkbox => {
-                    checkbox.checked = this.checked;
-                });
-                updateSelectedCount();
-            });
-        }
-
-        document.addEventListener('change', function(e) {
-            if (e.target.classList.contains('row-checkbox')) {
-                updateSelectedCount();
-            }
-        });
-
-        function updateSelectedCount() {
-            const visibleCheckboxes = document.querySelectorAll('.crop-row:not([style*="display: none"]) .row-checkbox');
-            const checkedBoxes = document.querySelectorAll('.crop-row:not([style*="display: none"]) .row-checkbox:checked');
-            
-            if (selectedCountSpan) {
-                selectedCountSpan.textContent = checkedBoxes.length;
-            }
-            
-            if (selectAllCheckbox) {
-                selectAllCheckbox.checked = visibleCheckboxes.length > 0 && checkedBoxes.length === visibleCheckboxes.length;
-                selectAllCheckbox.indeterminate = checkedBoxes.length > 0 && checkedBoxes.length < visibleCheckboxes.length;
-            }
-        }
-
-        // Initialize count on page load
-        updateSelectedCount();
     </script>
 </body>
 </html>
