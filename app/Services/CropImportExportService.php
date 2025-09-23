@@ -7,6 +7,8 @@ use App\Models\Farmer;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class CropImportExportService
 {
@@ -87,71 +89,220 @@ class CropImportExportService
             return $results;
         }
 
-        $path = $file->getRealPath();
-        $csvData = $this->csvToArray($path);
-
-        if (empty($csvData)) {
-            $results['messages'][] = 'CSV file is empty or could not be read.';
+        // Open file handle for streaming (memory efficient for large files)
+        $handle = fopen($file->getRealPath(), 'r');
+        if (!$handle) {
+            $results['messages'][] = 'Could not open CSV file for reading.';
             $results['errors']++;
             return $results;
         }
-
-        // Remove header row
-        $headers = array_shift($csvData);
         
-        foreach ($csvData as $index => $row) {
-            $rowNumber = $index + 2; // +2 because we removed header and arrays are 0-indexed
-            
+        // Read header row
+        $headers = fgetcsv($handle);
+        if (!$headers) {
+            fclose($handle);
+            $results['messages'][] = 'CSV file appears to be empty or invalid.';
+            $results['errors']++;
+            return $results;
+        }
+        
+        // Normalize headers for comparison (lowercase and trim)
+        $normalizedHeaders = array_map(function($header) {
+            $normalized = strtolower(trim($header));
+            // Remove common suffixes and normalize common patterns
+            $normalized = preg_replace('/\s*\([^)]*\)/', '', $normalized); // Remove (ha), (mt), etc.
+            $normalized = str_replace([' ', '-'], '_', $normalized); // Replace spaces and hyphens with underscores
+            // Map specific header variations
+            if ($normalized === 'crop') {
+                $normalized = 'crop_name';
+            }
+            return $normalized;
+        }, $headers);
+        
+        // Check if we have required headers for agricultural statistics format
+        $requiredHeaders = ['municipality', 'crop_name', 'farm_type', 'year', 'area_planted', 'area_harvested', 'production'];
+        $intersectingHeaders = array_intersect($requiredHeaders, $normalizedHeaders);
+        $hasNewFormat = count($intersectingHeaders) >= 5;
+        
+        \Log::info('CSV import format detection', [
+            'original_headers' => $headers,
+            'normalized_headers' => $normalizedHeaders,
+            'required_headers' => $requiredHeaders,
+            'intersecting_headers' => $intersectingHeaders,
+            'intersection_count' => count($intersectingHeaders),
+            'has_new_format' => $hasNewFormat
+        ]);
+        
+        // Process in chunks for better performance and memory usage
+        $chunkSize = 500; // Process 500 rows at a time
+        $chunk = [];
+        $rowNumber = 2; // Start from row 2 (after headers)
+        
+        while (($row = fgetcsv($handle)) !== false) {
             try {
-                $this->processCsvRow($row, $rowNumber);
-                $results['success']++;
+                if ($hasNewFormat) {
+                    // Convert row to associative array using headers
+                    $rowData = [];
+                    foreach ($normalizedHeaders as $colIndex => $header) {
+                        $rowData[$header] = trim($row[$colIndex] ?? '');
+                    }
+                    $processedData = $this->prepareCsvRowNewFormat($rowData, $rowNumber);
+                } else {
+                    $processedData = $this->prepareCsvRowOldFormat($row, $rowNumber);
+                }
+                
+                if ($processedData) {
+                    $chunk[] = $processedData;
+                }
+                
+                // Process chunk when it reaches the desired size
+                if (count($chunk) >= $chunkSize) {
+                    $chunkResults = $this->processBulkInsert($chunk, $hasNewFormat);
+                    $results['success'] += $chunkResults['success'];
+                    $results['errors'] += $chunkResults['errors'];
+                    $results['messages'] = array_merge($results['messages'], $chunkResults['messages']);
+                    $chunk = []; // Reset chunk
+                }
+                
             } catch (\Exception $e) {
                 $results['errors']++;
                 $results['messages'][] = "Row {$rowNumber}: " . $e->getMessage();
             }
+            
+            $rowNumber++;
+        }
+        
+        // Process any remaining data in the last chunk
+        if (!empty($chunk)) {
+            $chunkResults = $this->processBulkInsert($chunk, $hasNewFormat);
+            $results['success'] += $chunkResults['success'];
+            $results['errors'] += $chunkResults['errors'];
+            $results['messages'] = array_merge($results['messages'], $chunkResults['messages']);
+        }
+        
+        fclose($handle);
+        return $results;
+    }
+
+    /**
+     * Import crops from Excel file
+     */
+    public function importFromExcel(UploadedFile $file): array
+    {
+        $results = [
+            'success' => 0,
+            'errors' => 0,
+            'messages' => []
+        ];
+
+        if (!$file->isValid()) {
+            $results['messages'][] = 'Invalid file uploaded.';
+            $results['errors']++;
+            return $results;
+        }
+
+        if (!in_array($file->getClientOriginalExtension(), ['xlsx', 'xls'])) {
+            $results['messages'][] = 'File must be an Excel file (.xlsx or .xls).';
+            $results['errors']++;
+            return $results;
+        }
+
+        try {
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $highestRow = $worksheet->getHighestRow();
+            $highestColumn = $worksheet->getHighestColumn();
+
+            // Get headers from first row
+            $headers = [];
+            for ($col = 'A'; $col <= $highestColumn; $col++) {
+                $headers[] = strtolower(trim($worksheet->getCell($col . '1')->getValue()));
+            }
+
+            // Check if we have required headers for agricultural statistics format
+            $requiredHeaders = ['municipality', 'crop_name', 'farm_type', 'year', 'area_planted', 'area_harvested', 'production'];
+            $hasNewFormat = count(array_intersect($requiredHeaders, $headers)) >= 5;
+
+            \Log::info('Excel import format detection', [
+                'headers' => $headers,
+                'has_new_format' => $hasNewFormat,
+                'required_headers' => $requiredHeaders
+            ]);
+
+            // Process data rows
+            for ($row = 2; $row <= $highestRow; $row++) {
+                try {
+                    $rowData = [];
+                    for ($col = 'A'; $col <= $highestColumn; $col++) {
+                        $colIndex = ord($col) - ord('A');
+                        $rowData[$headers[$colIndex]] = trim($worksheet->getCell($col . $row)->getValue());
+                    }
+
+                    if ($hasNewFormat) {
+                        $this->processExcelRowNewFormat($rowData, $row);
+                    } else {
+                        $this->processExcelRowOldFormat($rowData, $row);
+                    }
+                    $results['success']++;
+                } catch (\Exception $e) {
+                    $results['errors']++;
+                    $results['messages'][] = "Row {$row}: " . $e->getMessage();
+                }
+            }
+
+        } catch (\Exception $e) {
+            $results['messages'][] = 'Error reading Excel file: ' . $e->getMessage();
+            $results['errors']++;
         }
 
         return $results;
     }
 
     /**
-     * Get CSV template for download
+     * Get CSV template for download (Agricultural Statistics Format)
      */
     public function getCsvTemplate(): string
     {
         $templateData = [
             [
-                'Farmer Name',
-                'Crop Name',
-                'Variety',
-                'Planting Date',
-                'Expected Harvest Date',
-                'Area (Hectares)',
-                'Status',
-                'Expected Yield (kg)',
-                'Description'
+                'Municipality',
+                'Crop_Name',
+                'Farm_Type',
+                'Year',
+                'Area_Planted',
+                'Area_Harvested',
+                'Production',
+                'Productivity'
             ],
             [
-                'John Doe',
+                'Antipolo City',
                 'Rice',
-                'IR64',
-                '2025-01-15',
-                '2025-05-15',
-                '2.5',
-                'planted',
-                '5000',
-                'First season rice crop'
+                'irrigated',
+                '2025',
+                '150.5',
+                '148.2',
+                '1250.75',
+                '8.44'
             ],
             [
-                'Jane Smith',
+                'Rodriguez',
                 'Corn',
-                'Sweet Corn',
-                '2025-02-01',
-                '2025-06-01',
-                '1.0',
-                'growing',
-                '2000',
-                'Organic corn for local market'
+                'rainfed',
+                '2025',
+                '75.3',
+                '73.1',
+                '421.8',
+                '5.77'
+            ],
+            [
+                'San Mateo',
+                'Sweet Potato',
+                'upland',
+                '2025',
+                '25.0',
+                '24.5',
+                '245.0',
+                '10.0'
             ]
         ];
 
@@ -214,6 +365,157 @@ class CropImportExportService
     }
 
     /**
+     * Process Excel row in new agricultural statistics format
+     */
+    protected function processExcelRowNewFormat(array $rowData, int $rowNumber): void
+    {
+        // Map Excel columns to database fields
+        $data = [
+            'municipality' => $rowData['municipality'] ?? '',
+            'crop_name' => $rowData['crop_name'] ?? $rowData['crop'] ?? '',
+            'farm_type' => $rowData['farm_type'] ?? $rowData['farmtype'] ?? '',
+            'year' => $rowData['year'] ?? '',
+            'area_planted' => $rowData['area_planted'] ?? $rowData['area planted'] ?? '',
+            'area_harvested' => $rowData['area_harvested'] ?? $rowData['area harvested'] ?? '',
+            'production' => $rowData['production'] ?? $rowData['production_mt'] ?? '',
+            'productivity' => $rowData['productivity'] ?? $rowData['productivity_mt_ha'] ?? null,
+        ];
+
+        // Validate data
+        $validator = Validator::make($data, [
+            'municipality' => 'required|string|max:255',
+            'crop_name' => 'required|string|max:255',
+            'farm_type' => 'required|string|in:irrigated,rainfed,upland,lowland',
+            'year' => 'required|integer|min:2000|max:2030',
+            'area_planted' => 'required|numeric|min:0.01|max:99999.99',
+            'area_harvested' => 'required|numeric|min:0.01|max:99999.99',
+            'production' => 'required|numeric|min:0.01|max:99999999.99',
+            'productivity' => 'nullable|numeric|min:0|max:99999.99',
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Exception('Validation failed: ' . implode(', ', $validator->errors()->all()));
+        }
+
+        // Create crop record
+        Crop::create([
+            'municipality' => $data['municipality'],
+            'crop_name' => $data['crop_name'],
+            'farm_type' => $data['farm_type'],
+            'year' => $data['year'],
+            'area_planted' => $data['area_planted'],
+            'area_harvested' => $data['area_harvested'],
+            'production_mt' => $data['production'],
+            'productivity_mt_ha' => $data['productivity'],
+            'status' => 'planted', // Default status
+        ]);
+    }
+
+    /**
+     * Process CSV row in new agricultural statistics format
+     */
+    protected function processCsvRowNewFormat(array $rowData, int $rowNumber): void
+    {
+        // Map CSV columns to database fields (same logic as Excel processing)
+        $data = [
+            'municipality' => $rowData['municipality'] ?? '',
+            'crop_name' => $rowData['crop_name'] ?? $rowData['crop'] ?? '',
+            'farm_type' => strtolower(trim($rowData['farm_type'] ?? $rowData['farmtype'] ?? '')),
+            'year' => $rowData['year'] ?? '',
+            'area_planted' => $rowData['area_planted'] ?? $rowData['area planted'] ?? '',
+            'area_harvested' => $rowData['area_harvested'] ?? $rowData['area harvested'] ?? '',
+            'production' => $rowData['production'] ?? $rowData['production_mt'] ?? '',
+            'productivity' => $rowData['productivity'] ?? $rowData['productivity_mt_ha'] ?? null,
+        ];
+
+
+
+        // Validate data
+        $validator = Validator::make($data, [
+            'municipality' => 'required|string|max:255',
+            'crop_name' => 'required|string|max:255',
+            'farm_type' => 'required|string|in:irrigated,rainfed,upland,lowland',
+            'year' => 'required|integer|min:2000|max:2030',
+            'area_planted' => 'required|numeric|min:0.01|max:99999.99',
+            'area_harvested' => 'required|numeric|min:0.01|max:99999.99',
+            'production' => 'required|numeric|min:0.01|max:99999999.99',
+            'productivity' => 'nullable|numeric|min:0|max:99999.99',
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Exception('Validation failed: ' . implode(', ', $validator->errors()->all()));
+        }
+
+        // Create crop record
+        Crop::create([
+            'municipality' => $data['municipality'],
+            'crop_name' => $data['crop_name'],
+            'farm_type' => $data['farm_type'],
+            'year' => $data['year'],
+            'area_planted' => $data['area_planted'],
+            'area_harvested' => $data['area_harvested'],
+            'production_mt' => $data['production'],
+            'productivity_mt_ha' => $data['productivity'],
+            'status' => 'planted', // Default status
+        ]);
+    }
+
+    /**
+     * Process Excel row in old farmer-based format
+     */
+    protected function processExcelRowOldFormat(array $rowData, int $rowNumber): void
+    {
+        // Map Excel columns to expected format
+        $data = [
+            'farmer_name' => $rowData['farmer_name'] ?? $rowData['farmer'] ?? '',
+            'name' => $rowData['crop_name'] ?? $rowData['name'] ?? '',
+            'variety' => $rowData['variety'] ?? null,
+            'planting_date' => $rowData['planting_date'] ?? '',
+            'expected_harvest_date' => $rowData['expected_harvest_date'] ?? null,
+            'area_hectares' => $rowData['area_hectares'] ?? $rowData['area'] ?? '',
+            'status' => $rowData['status'] ?? 'planted',
+            'expected_yield_kg' => $rowData['expected_yield_kg'] ?? $rowData['expected_yield'] ?? null,
+            'description' => $rowData['description'] ?? null,
+        ];
+
+        // Validate data
+        $validator = Validator::make($data, [
+            'farmer_name' => 'required|string',
+            'name' => 'required|string|max:255',
+            'variety' => 'nullable|string|max:255',
+            'planting_date' => 'required|date',
+            'expected_harvest_date' => 'nullable|date|after:planting_date',
+            'area_hectares' => 'required|numeric|min:0.01',
+            'status' => 'required|in:planted,growing,harvested,failed',
+            'expected_yield_kg' => 'nullable|numeric|min:0',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Exception('Validation failed: ' . implode(', ', $validator->errors()->all()));
+        }
+
+        // Find farmer by name
+        $farmer = Farmer::where('farmerName', 'LIKE', '%' . $data['farmer_name'] . '%')->first();
+        if (!$farmer) {
+            throw new \Exception("Farmer '{$data['farmer_name']}' not found");
+        }
+
+        // Create crop record
+        Crop::create([
+            'farmer_id' => $farmer->farmerID,
+            'name' => $data['name'],
+            'variety' => $data['variety'],
+            'planting_date' => $data['planting_date'],
+            'expected_harvest_date' => $data['expected_harvest_date'],
+            'area_hectares' => $data['area_hectares'],
+            'status' => $data['status'],
+            'expected_yield_kg' => $data['expected_yield_kg'],
+            'description' => $data['description'],
+        ]);
+    }
+
+    /**
      * Convert array to CSV string
      */
     protected function arrayToCsv(array $data): string
@@ -246,5 +548,138 @@ class CropImportExportService
         }
         
         return $data;
+    }
+
+    /**
+     * Prepare CSV row data for new format (agricultural statistics) without inserting
+     */
+    protected function prepareCsvRowNewFormat(array $rowData, int $rowNumber): ?array
+    {
+        // Map CSV columns to database fields (same logic as Excel processing)
+        $data = [
+            'municipality' => $rowData['municipality'] ?? '',
+            'crop_name' => $rowData['crop_name'] ?? $rowData['crop'] ?? '',
+            'farm_type' => strtolower(trim($rowData['farm_type'] ?? $rowData['farmtype'] ?? '')),
+            'year' => $rowData['year'] ?? '',
+            'area_planted' => $rowData['area_planted'] ?? $rowData['area planted'] ?? '',
+            'area_harvested' => $rowData['area_harvested'] ?? $rowData['area harvested'] ?? '',
+            'production' => $rowData['production'] ?? $rowData['production_mt'] ?? '',
+            'productivity' => $rowData['productivity'] ?? $rowData['productivity_mt_ha'] ?? null,
+        ];
+
+        // Validate data
+        $validator = Validator::make($data, [
+            'municipality' => 'required|string|max:255',
+            'crop_name' => 'required|string|max:255',
+            'farm_type' => 'required|string|in:irrigated,rainfed,upland,lowland',
+            'year' => 'required|integer|min:2000|max:2030',
+            'area_planted' => 'required|numeric|min:0.01|max:99999.99',
+            'area_harvested' => 'required|numeric|min:0.01|max:99999.99',
+            'production' => 'required|numeric|min:0.01|max:99999999.99',
+            'productivity' => 'nullable|numeric|min:0|max:99999.99',
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Exception('Validation failed: ' . implode(', ', $validator->errors()->all()));
+        }
+
+        // Return prepared data for bulk insert
+        return [
+            'municipality' => $data['municipality'],
+            'crop_name' => $data['crop_name'],
+            'farm_type' => $data['farm_type'],
+            'year' => $data['year'],
+            'area_planted' => $data['area_planted'],
+            'area_harvested' => $data['area_harvested'],
+            'production_mt' => $data['production'],
+            'productivity_mt_ha' => $data['productivity'],
+            'status' => 'planted', // Default status
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+    }
+
+    /**
+     * Prepare CSV row data for old format (farmer-based) without inserting
+     */
+    protected function prepareCsvRowOldFormat(array $row, int $rowNumber): ?array
+    {
+        // Map CSV columns to expected format
+        $data = [
+            'farmer_name' => trim($row[0] ?? ''),
+            'name' => trim($row[1] ?? ''),
+            'variety' => trim($row[2] ?? '') ?: null,
+            'planting_date' => trim($row[3] ?? ''),
+            'expected_harvest_date' => trim($row[4] ?? '') ?: null,
+            'area_hectares' => trim($row[5] ?? ''),
+            'status' => trim($row[6] ?? '') ?: 'planted',
+            'expected_yield_kg' => trim($row[7] ?? '') ?: null,
+            'description' => trim($row[8] ?? '') ?: null,
+        ];
+
+        // Validate data
+        $validator = Validator::make($data, [
+            'farmer_name' => 'required|string',
+            'name' => 'required|string|max:255',
+            'variety' => 'nullable|string|max:255',
+            'planting_date' => 'required|date',
+            'expected_harvest_date' => 'nullable|date|after:planting_date',
+            'area_hectares' => 'required|numeric|min:0.01',
+            'status' => 'required|in:planted,growing,harvested,failed',
+            'expected_yield_kg' => 'nullable|numeric|min:0',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        if ($validator->fails()) {
+            throw new \Exception('Validation failed: ' . implode(', ', $validator->errors()->all()));
+        }
+
+        // Find farmer by name
+        $farmer = Farmer::where('farmerName', 'LIKE', '%' . $data['farmer_name'] . '%')->first();
+        if (!$farmer) {
+            throw new \Exception("Farmer '{$data['farmer_name']}' not found");
+        }
+
+        // Return prepared data for bulk insert
+        return [
+            'farmer_id' => $farmer->farmerID,
+            'name' => $data['name'],
+            'variety' => $data['variety'],
+            'planting_date' => $data['planting_date'],
+            'expected_harvest_date' => $data['expected_harvest_date'],
+            'area_hectares' => $data['area_hectares'],
+            'status' => $data['status'],
+            'expected_yield_kg' => $data['expected_yield_kg'],
+            'description' => $data['description'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+    }
+
+    /**
+     * Process bulk insert for improved performance
+     */
+    protected function processBulkInsert(array $chunk, bool $isNewFormat): array
+    {
+        $results = ['success' => 0, 'errors' => 0, 'messages' => []];
+        
+        try {
+            // Use bulk insert for better performance
+            Crop::insert($chunk);
+            $results['success'] = count($chunk);
+        } catch (\Exception $e) {
+            // If bulk insert fails, try individual inserts to identify problematic rows
+            foreach ($chunk as $index => $rowData) {
+                try {
+                    Crop::create($rowData);
+                    $results['success']++;
+                } catch (\Exception $rowException) {
+                    $results['errors']++;
+                    $results['messages'][] = "Chunk row " . ($index + 1) . ": " . $rowException->getMessage();
+                }
+            }
+        }
+        
+        return $results;
     }
 }

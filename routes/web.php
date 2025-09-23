@@ -53,4 +53,14 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     Route::get('/crops/export', [App\Http\Controllers\CropController::class, 'export'])->name('crops.export');
     Route::get('/crops/template', [App\Http\Controllers\CropController::class, 'downloadTemplate'])->name('crops.template');
     Route::get('/crops/{crop}/export', [App\Http\Controllers\CropController::class, 'exportSingle'])->name('crops.export-single');
+    Route::post('/crops/delete-multiple', [App\Http\Controllers\CropController::class, 'deleteMultiple'])->name('crops.delete-multiple');
+    Route::post('/crops/test-import', [App\Http\Controllers\CropController::class, 'testImport'])->name('crops.test-import');
+    Route::get('/test-upload', function() { return view('test_upload'); });
+    Route::get('/test-auth', function() { 
+        return response()->json([
+            'authenticated' => Auth::check(),
+            'user' => Auth::user(),
+            'guard' => Auth::getDefaultDriver()
+        ]); 
+    });
 });
