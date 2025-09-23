@@ -678,68 +678,76 @@
                 console.log('Full response data:', data); // Debug full response
                 if (data.success) {
                     console.log('Archive success:', data); // Debug log
-                    const archivedCount = data.debug && data.debug.archived_count ? data.debug.archived_count : itemsToDelete.length;
+                    
+                    // Ensure itemsToDelete is an array
+                    const idsArray = Array.isArray(itemsToDelete) ? itemsToDelete : [itemsToDelete];
+                    console.log('Processing IDs array:', idsArray);
+                    
+                    const archivedCount = data.debug && data.debug.archived_count ? data.debug.archived_count : idsArray.length;
                     showSuccessMessage(data.message || `Successfully archived ${archivedCount} item(s)!`);
                     closeConfirmDeleteModal();
                     
-                    // Remove archived rows from table immediately
+                    // Remove deleted rows from table immediately
                     console.log('Removing rows for IDs:', itemsToDelete);
+                    console.log('Items to delete array:', JSON.stringify(itemsToDelete));
+                    let removedCount = 0;
                     
-                    itemsToDelete.forEach(cropId => {
+                    idsArray.forEach(cropId => {
                         const cropIdStr = String(cropId);
+                        console.log(`Looking for row with data-crop-id="${cropIdStr}"`);
                         
-                        // Try multiple selectors to find the row
+                        // Find the row using data-crop-id attribute
                         let row = document.querySelector(`tr[data-crop-id="${cropIdStr}"]`);
+                        console.log(`Found row with selector:`, row);
                         
                         if (!row) {
                             // Alternative: look through all rows manually
-                            const allRows = document.querySelectorAll('tbody tr');
+                            const allRows = document.querySelectorAll('.crop-row');
+                            console.log(`Searching through ${allRows.length} rows manually`);
                             for (let r of allRows) {
-                                if (r.getAttribute('data-crop-id') === cropIdStr) {
+                                const rowId = r.getAttribute('data-crop-id');
+                                console.log(`Checking row with data-crop-id="${rowId}"`);
+                                if (rowId === cropIdStr) {
                                     row = r;
+                                    console.log(`Found matching row manually:`, row);
                                     break;
                                 }
                             }
                         }
                         
                         if (row) {
-                            console.log(`Removing row for crop ID: ${cropIdStr}`);
-                            row.style.opacity = '0.5'; // Visual feedback
+                            console.log(`Removing row for crop ID: ${cropIdStr}`, row);
+                            row.style.transition = 'opacity 0.3s ease';
+                            row.style.opacity = '0.3';
+                            row.style.backgroundColor = '#fee2e2'; // Light red background
+                            
                             setTimeout(() => {
+                                console.log(`Actually removing row ${cropIdStr} from DOM`);
                                 row.remove();
+                                removedCount++;
                                 console.log(`Row ${cropIdStr} removed successfully`);
-                            }, 200);
+                                
+                                // Update counts after each removal
+                                updateTableCounts();
+                                
+                                // Check if we've removed all expected rows  
+                                if (removedCount === idsArray.length) {
+                                    checkEmptyTableState();
+                                }
+                            }, 300);
                         } else {
                             console.error(`Could not find row for crop ID: ${cropIdStr}`);
+                            console.log('Available rows with data-crop-id:');
+                            document.querySelectorAll('[data-crop-id]').forEach(r => {
+                                console.log(`- data-crop-id="${r.getAttribute('data-crop-id')}"`);
+                            });
+                            removedCount++; // Count as processed even if not found
+                            if (removedCount === idsArray.length) {
+                                checkEmptyTableState();
+                            }
                         }
                     });
-                    
-                    // Update counts and check if table is empty
-                    updateTotalCount();
-                    updateSelectedCount();
-                    
-                    // Check if table is now empty and show empty state
-                    setTimeout(() => {
-                        const tableBody = document.getElementById('cropTableBody');
-                        const remainingRows = tableBody.querySelectorAll('tr.crop-row');
-                        
-                        if (remainingRows.length === 0) {
-                            // Add empty state
-                            const emptyRow = document.createElement('tr');
-                            emptyRow.innerHTML = `
-                                <td colspan="7" class="px-6 py-12 text-center">
-                                    <div class="flex flex-col items-center justify-center">
-                                        <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                        </svg>
-                                        <div class="text-lg font-medium mb-2">No crop data found</div>
-                                        <p class="text-gray-500 mb-4">Get started by adding your first crop data</p>
-                                    </div>
-                                </td>
-                            `;
-                            tableBody.appendChild(emptyRow);
-                        }
-                    }, 300);
+
                 } else {
                     // Even if server says items don't exist, remove them from UI
                     // (they might have been archived in another tab/session)
@@ -791,13 +799,14 @@
                         }, 300);
                         
                     } else {
-                        throw new Error(data.message || 'Failed to archive items');
+                        throw new Error(data.message || 'Failed to delete items');
                     }
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Delete request failed:', error);
                 showErrorMessage(error.message || 'Failed to delete items. Please try again.');
+                closeConfirmDeleteModal();
             })
             .finally(() => {
                 confirmBtn.disabled = false;
@@ -849,10 +858,12 @@
         // Function to delete selected items
         function deleteSelectedItems() {
             const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            console.log('Found checked boxes:', checkedBoxes.length);
+            
             const selectedIds = Array.from(checkedBoxes).map(checkbox => {
                 const row = checkbox.closest('tr');
                 const cropId = row ? row.getAttribute('data-crop-id') : null;
-                console.log('Checkbox row crop ID:', cropId); // Debug log
+                console.log('Checkbox row crop ID:', cropId, 'Row element:', row); // Debug log
                 return cropId;
             }).filter(id => id); // Remove any null/undefined IDs
             
@@ -1060,38 +1071,48 @@
             
             // Create new row
             const newRow = document.createElement('tr');
-            newRow.className = 'hover:bg-gray-50 crop-row';
+            newRow.className = 'border-b border-gray-100 hover:bg-gray-50 crop-row';
             newRow.setAttribute('data-crop-id', crop.id); // CRITICAL: Add the crop ID for deletion
             newRow.setAttribute('data-crop', (crop.crop_name || crop.name || '').toLowerCase());
             newRow.setAttribute('data-municipality', (crop.municipality || '').toLowerCase());
             newRow.setAttribute('data-year', crop.year || '');
             
             newRow.innerHTML = `
-                <td class="px-6 py-4">
-                    <input type="checkbox" class="rounded row-checkbox">
+                <td class="px-4 py-4">
+                    <input type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 row-checkbox">
                 </td>
-                <td class="px-6 py-4 text-sm font-medium text-gray-900">
+                <td class="px-4 py-4 text-sm font-medium text-gray-900">
                     ${crop.crop_name || crop.name || 'N/A'}
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-900">
+                <td class="px-4 py-4 text-sm text-gray-700">
                     ${crop.municipality || 'N/A'}
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-900">
+                <td class="px-4 py-4 text-sm text-gray-700">
                     ${crop.year || 'N/A'}
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-900">
+                <td class="px-4 py-4 text-sm text-gray-700">
                     ${crop.area_planted ? parseFloat(crop.area_planted).toFixed(1) : (crop.area_hectares ? parseFloat(crop.area_hectares).toFixed(1) : 'N/A')}
                 </td>
-                <td class="px-6 py-4 text-sm text-gray-900">
+                <td class="px-4 py-4 text-sm text-gray-700">
                     ${crop.productivity_mt_ha ? parseFloat(crop.productivity_mt_ha).toFixed(4) : 'N/A'}
                 </td>
-                <td class="px-6 py-4 text-sm">
-                    <div class="flex space-x-2">
-                        <button onclick="deleteSingleItem(${crop.id})" class="text-red-400 hover:text-red-600 transition-colors duration-200" title="Delete item">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                <td class="px-4 py-4 text-right">
+                    <div class="relative inline-block">
+                        <button onclick="toggleDropdown(${crop.id})" class="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="More actions">
+                            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
                             </svg>
                         </button>
+                        <div id="dropdown-${crop.id}" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                            <div class="py-1">
+                                <button onclick="editCrop(${crop.id})" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    Edit
+                                </button>
+                                <button onclick="deleteSingleItem(${crop.id})" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </td>
             `;
@@ -1361,6 +1382,46 @@
             
             console.log('Event listeners added');
         });
+        
+        // Helper functions for delete operations
+        function updateTableCounts() {
+            updateTotalCount();
+            updateSelectedCount();
+        }
+        
+        function checkEmptyTableState() {
+            setTimeout(() => {
+                const tableBody = document.getElementById('cropTableBody');
+                const remainingRows = tableBody.querySelectorAll('.crop-row');
+                
+                if (remainingRows.length === 0) {
+                    // Add empty state
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.innerHTML = `
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                            <div class="flex flex-col items-center justify-center">
+                                <svg class="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                <div class="text-lg font-medium mb-2">All items deleted</div>
+                                <p class="text-gray-500 mb-4">The page will refresh to show updated data</p>
+                                <button onclick="window.location.reload()" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                    Refresh Page
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(emptyRow);
+                    
+                    // Also disable the select all checkbox since there are no items
+                    const selectAllCheckbox = document.getElementById('selectAll');
+                    if (selectAllCheckbox) {
+                        selectAllCheckbox.disabled = true;
+                        selectAllCheckbox.checked = false;
+                    }
+                }
+            }, 400);
+        }
     </script>
 </body>
 </html>
