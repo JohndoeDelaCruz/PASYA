@@ -27,35 +27,160 @@ class CropController extends Controller
         // Build query with filters
         $query = Crop::with('farmer');
         
-        // Apply search filter
+        // Apply comprehensive search filter across all relevant fields
         if ($request->filled('search')) {
             $searchTerm = $request->get('search');
             $query->where(function($q) use ($searchTerm) {
+                // Search in text fields
                 $q->where('crop_name', 'LIKE', "%{$searchTerm}%")
                   ->orWhere('name', 'LIKE', "%{$searchTerm}%")
                   ->orWhere('municipality', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('year', 'LIKE', "%{$searchTerm}%");
+                  ->orWhere('farm_type', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('status', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('crop_category', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('production_month', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('production_farm_type', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('variety', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('description', 'LIKE', "%{$searchTerm}%");
+                
+                // Search in numeric fields (if search term is numeric)
+                if (is_numeric($searchTerm)) {
+                    $numericValue = floatval($searchTerm);
+                    $q->orWhere('year', '=', $numericValue)
+                      ->orWhere('area_planted', '=', $numericValue)
+                      ->orWhere('area_harvested', '=', $numericValue)
+                      ->orWhere('production_mt', '=', $numericValue)
+                      ->orWhere('productivity_mt_ha', '=', $numericValue)
+                      ->orWhere('crop_days_to_maturity', '=', $numericValue)
+                      ->orWhere('area_hectares', '=', $numericValue)
+                      ->orWhere('expected_yield_kg', '=', $numericValue)
+                      ->orWhere('actual_yield_kg', '=', $numericValue);
+                } else {
+                    // For non-numeric searches, also search year as string
+                    $q->orWhere('year', 'LIKE', "%{$searchTerm}%");
+                }
+                
+                // Search in date fields (if search term looks like a date)
+                if (preg_match('/\d{4}-\d{2}-\d{2}/', $searchTerm)) {
+                    $q->orWhere('planting_date', 'LIKE', "%{$searchTerm}%")
+                      ->orWhere('expected_harvest_date', 'LIKE', "%{$searchTerm}%")
+                      ->orWhere('actual_harvest_date', 'LIKE', "%{$searchTerm}%");
+                }
+                
+                // Search in related farmer data if farmer relationship exists
+                $q->orWhereHas('farmer', function($farmerQuery) use ($searchTerm) {
+                    $farmerQuery->where('farmerName', 'LIKE', "%{$searchTerm}%")
+                               ->orWhere('farmerLocation', 'LIKE', "%{$searchTerm}%")
+                               ->orWhere('farmerAddress', 'LIKE', "%{$searchTerm}%")
+                               ->orWhere('farmerContact', 'LIKE', "%{$searchTerm}%");
+                });
             });
         }
         
-        // Apply municipality filter
+        // Apply comprehensive filters that search through all datasets
+        
+        // Comprehensive Municipality filter - searches through all location-related fields
         if ($request->filled('municipality')) {
-            $query->where('municipality', $request->get('municipality'));
+            $municipalityFilter = $request->get('municipality');
+            $query->where(function($q) use ($municipalityFilter) {
+                $q->where('municipality', 'LIKE', "%{$municipalityFilter}%")
+                  ->orWhere('farmerLocation', 'LIKE', "%{$municipalityFilter}%")
+                  ->orWhere('farmerAddress', 'LIKE', "%{$municipalityFilter}%");
+                
+                // Also search in related farmer data
+                $q->orWhereHas('farmer', function($farmerQuery) use ($municipalityFilter) {
+                    $farmerQuery->where('farmerLocation', 'LIKE', "%{$municipalityFilter}%")
+                               ->orWhere('farmerAddress', 'LIKE', "%{$municipalityFilter}%")
+                               ->orWhere('municipality', 'LIKE', "%{$municipalityFilter}%");
+                });
+            });
         }
         
-        // Apply crop filter
+        // Comprehensive Crop filter - searches through all crop-related fields  
         if ($request->filled('crop')) {
             $cropFilter = $request->get('crop');
             $query->where(function($q) use ($cropFilter) {
-                $q->where('crop_name', $cropFilter)
-                  ->orWhere('name', $cropFilter);
+                $q->where('crop_name', 'LIKE', "%{$cropFilter}%")
+                  ->orWhere('name', 'LIKE', "%{$cropFilter}%")
+                  ->orWhere('variety', 'LIKE', "%{$cropFilter}%")
+                  ->orWhere('crop_category', 'LIKE', "%{$cropFilter}%")
+                  ->orWhere('description', 'LIKE', "%{$cropFilter}%");
             });
         }
         
-        // Apply sorting
+        // Farm type filter
+        if ($request->filled('farm_type')) {
+            $query->where('farm_type', $request->get('farm_type'));
+        }
+        
+        // Year filter
+        if ($request->filled('year')) {
+            $query->where('year', $request->get('year'));
+        }
+        
+        // Status filter
+        if ($request->filled('status')) {
+            $query->where('status', $request->get('status'));
+        }
+        
+        // Crop category filter
+        if ($request->filled('crop_category')) {
+            $query->where('crop_category', $request->get('crop_category'));
+        }
+        
+        // Production month filter
+        if ($request->filled('production_month')) {
+            $query->where('production_month', $request->get('production_month'));
+        }
+        
+        // Area planted range filter
+        if ($request->filled('min_area_planted')) {
+            $query->where('area_planted', '>=', $request->get('min_area_planted'));
+        }
+        if ($request->filled('max_area_planted')) {
+            $query->where('area_planted', '<=', $request->get('max_area_planted'));
+        }
+        
+        // Production range filter
+        if ($request->filled('min_production')) {
+            $query->where('production_mt', '>=', $request->get('min_production'));
+        }
+        if ($request->filled('max_production')) {
+            $query->where('production_mt', '<=', $request->get('max_production'));
+        }
+        
+        // Productivity range filter
+        if ($request->filled('min_productivity')) {
+            $query->where('productivity_mt_ha', '>=', $request->get('min_productivity'));
+        }
+        if ($request->filled('max_productivity')) {
+            $query->where('productivity_mt_ha', '<=', $request->get('max_productivity'));
+        }
+        
+        // Date range filters
+        if ($request->filled('date_from')) {
+            $query->where('planting_date', '>=', $request->get('date_from'));
+        }
+        if ($request->filled('date_to')) {
+            $query->where('planting_date', '<=', $request->get('date_to'));
+        }
+        
+        // Apply sorting with multiple options
         if ($request->filled('sort')) {
             $sortDirection = $request->get('sort') === 'desc' ? 'desc' : 'asc';
-            $query->orderBy('crop_name', $sortDirection);
+            $sortBy = $request->get('sort_by', 'crop_name');
+            
+            // Validate sort field to prevent SQL injection
+            $allowedSortFields = [
+                'crop_name', 'municipality', 'farm_type', 'year', 'area_planted', 
+                'area_harvested', 'production_mt', 'productivity_mt_ha', 'created_at'
+            ];
+            
+            if (in_array($sortBy, $allowedSortFields)) {
+                $query->orderBy($sortBy, $sortDirection);
+            } else {
+                $query->orderBy('crop_name', $sortDirection);
+            }
         } else {
             $query->orderBy('created_at', 'desc');
         }
@@ -70,35 +195,32 @@ class CropController extends Controller
         // Append current query parameters to pagination links
         $crops->appends($request->query());
         
-        // Get all unique municipalities and crop names for filters (even if current page has no crops)
-        $allMunicipalities = Crop::select('municipality')
-            ->whereNotNull('municipality')
-            ->where('municipality', '!=', '')
-            ->distinct()
-            ->orderBy('municipality')
-            ->pluck('municipality');
-            
-        // Also try to get crop names from 'name' field if 'crop_name' is empty
-        $cropNamesFromCropName = Crop::select('crop_name')
-            ->whereNotNull('crop_name')
-            ->where('crop_name', '!=', '')
-            ->distinct()
-            ->pluck('crop_name');
-            
-        $cropNamesFromName = Crop::select('name')
-            ->whereNotNull('name')
-            ->where('name', '!=', '')
-            ->distinct()
-            ->pluck('name');
-            
-        // Combine both sources of crop names
-        $allCropNames = $cropNamesFromCropName->merge($cropNamesFromName)->unique()->sort()->values();
+        // Get comprehensive filter data
+        $allMunicipalities = $this->getMunicipalities();
+        $allCropNames = $this->getHighlandCrops();
+        $allCropCategories = $this->getCropCategories();
+        $highlandCropsData = $this->getHighlandCropsData();
+        $allProductionMonths = $this->getProductionMonths();
+        $allProductionFarmTypes = $this->getProductionFarmTypes();
+        
+        // Additional filter options
+        $allFarmTypes = $this->getFarmTypes();
+        $allYears = $this->getAvailableYears();
+        $allStatuses = $this->getAvailableStatuses();
+        $productionRanges = $this->getProductionRanges();
+        $areaRanges = $this->getAreaRanges();
+        $productivityRanges = $this->getProductivityRanges();
         
         // Debug logging
         $totalCrops = Crop::count();
         $sampleCrops = Crop::select(['id', 'municipality', 'crop_name', 'name'])->limit(5)->get();
         
-        return view('admin.crops.index', compact('crops', 'allMunicipalities', 'allCropNames'));
+        return view('admin.crops.index', compact(
+            'crops', 'allMunicipalities', 'allCropNames', 'allCropCategories', 
+            'highlandCropsData', 'allProductionMonths', 'allProductionFarmTypes',
+            'allFarmTypes', 'allYears', 'allStatuses', 'productionRanges', 
+            'areaRanges', 'productivityRanges'
+        ));
     }
 
     /**
@@ -126,20 +248,37 @@ class CropController extends Controller
                 'has_crop_name' => $request->has('crop_name')
             ]);
             
+            // Get standardized data
+            $municipalities = $this->getMunicipalities();
+            $highlandCrops = $this->getHighlandCrops();
+            
             // Check if this is the new modal format (agricultural statistics data) or old format
             if ($request->has('municipality') || $request->has('crop_name')) {
                 // New modal format - agricultural statistics data
+                $cropCategories = $this->getCropCategories();
                 $validated = $request->validate([
-                    'municipality' => 'required|string|max:255',
+                    'municipality' => ['required', 'string', Rule::in($municipalities->toArray())],
                     'farm_type' => 'required|string|in:irrigated,rainfed,upland,lowland',
                     'year' => 'required|integer|min:2000|max:2030',
-                    'crop_name' => 'required|string|max:255',
+                    'crop_name' => ['required', 'string', Rule::in($highlandCrops->toArray())],
                     'area_planted' => 'required|numeric|min:0.01|max:99999.99',
-                    'area_harvested' => 'required|numeric|min:0.01|max:99999.99',
+                    'area_harvested' => 'required|numeric|min:0.01|max:99999.99|lte:area_planted',
                     'production' => 'required|numeric|min:0.01|max:99999999.99',
                     'productivity' => 'nullable|numeric|min:0|max:99999.99',
+                    // New suggested fields
+                    'cropID' => 'nullable|string|max:50|unique:crops,cropID',
+                    'cropCategory' => ['nullable', 'string', Rule::in($cropCategories->toArray())],
+                    'cropDaysToMaturity' => 'nullable|integer|min:1|max:365',
+                    'productionMonth' => 'nullable|string|in:January,February,March,April,May,June,July,August,September,October,November,December',
+                    'productionFarmType' => 'nullable|string|in:Irrigated,Rainfed',
+                ], [
+                    'area_harvested.lte' => 'Area harvested cannot be greater than area planted.',
                 ]);
 
+                // Auto-populate category and days to maturity if not provided
+                $highlandCropsData = $this->getHighlandCropsData();
+                $cropInfo = $highlandCropsData->get($validated['crop_name'], []);
+                
                 // Map form field names to database field names
                 $cropData = [
                     'municipality' => $validated['municipality'],
@@ -151,6 +290,12 @@ class CropController extends Controller
                     'production_mt' => $validated['production'],
                     'productivity_mt_ha' => $validated['productivity'],
                     'status' => 'planted', // Default status
+                    // New suggested fields
+                    'cropID' => $validated['cropID'],
+                    'cropCategory' => $validated['cropCategory'] ?? $cropInfo['category'] ?? null,
+                    'cropDaysToMaturity' => $validated['cropDaysToMaturity'] ?? $cropInfo['days_to_maturity'] ?? null,
+                    'productionMonth' => $validated['productionMonth'],
+                    'productionFarmType' => $validated['productionFarmType'],
                 ];
 
                 $crop = Crop::create($cropData);
@@ -216,10 +361,15 @@ class CropController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Crop $crop)
+    public function show(Crop $crop, Request $request)
     {
         // Load the farmer relationship
         $crop->load('farmer');
+        
+        // Return JSON for AJAX requests
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json($crop);
+        }
         
         return view('admin.crops.show', compact('crop'));
     }
@@ -240,29 +390,133 @@ class CropController extends Controller
      */
     public function update(Request $request, Crop $crop)
     {
-        $validated = $request->validate([
-            'farmer_id' => 'required|exists:tblFarmers,farmerID',
-            'name' => 'required|string|max:255',
-            'variety' => 'nullable|string|max:255',
-            'planting_date' => 'required|date',
-            'expected_harvest_date' => 'nullable|date|after:planting_date',
-            'area_hectares' => 'required|numeric|min:0.01|max:9999.99',
-            'description' => 'nullable|string|max:1000',
-            'expected_yield_kg' => 'nullable|numeric|min:0|max:99999999.99',
-        ]);
+        try {
+            // Get standardized data
+            $municipalities = $this->getMunicipalities();
+            $highlandCrops = $this->getHighlandCrops();
+            
+            // Check if this is the new modal format (agricultural statistics data) or old format
+            if ($request->has('municipality') || $request->has('crop_name')) {
+                // New modal format - agricultural statistics data
+                $cropCategories = $this->getCropCategories();
+                $validated = $request->validate([
+                    'municipality' => ['required', 'string', Rule::in($municipalities->toArray())],
+                    'farm_type' => 'required|string|in:irrigated,rainfed,upland,lowland',
+                    'year' => 'required|integer|min:2000|max:2030',
+                    'crop_name' => ['required', 'string', Rule::in($highlandCrops->toArray())],
+                    'area_planted' => 'required|numeric|min:0.01|max:99999.99',
+                    'area_harvested' => 'required|numeric|min:0.01|max:99999.99|lte:area_planted',
+                    'production' => 'required|numeric|min:0.01|max:99999999.99',
+                    'productivity' => 'nullable|numeric|min:0|max:99999.99',
+                    // New suggested fields
+                    'cropID' => 'nullable|string|max:50|unique:crops,cropID,' . $crop->id,
+                    'cropCategory' => ['nullable', 'string', Rule::in($cropCategories->toArray())],
+                    'cropDaysToMaturity' => 'nullable|integer|min:1|max:365',
+                    'productionMonth' => 'nullable|string|in:January,February,March,April,May,June,July,August,September,October,November,December',
+                    'productionFarmType' => 'nullable|string|in:Irrigated,Rainfed',
+                ], [
+                    'area_harvested.lte' => 'Area harvested cannot be greater than area planted.',
+                ]);
 
-        $crop->update($validated);
+                // Auto-populate category and days to maturity if not provided
+                $highlandCropsData = $this->getHighlandCropsData();
+                $cropInfo = $highlandCropsData->get($validated['crop_name'], []);
 
-        return redirect()->route('admin.crops.index')->with('success', 'Crop updated successfully!');
+                // Map form field names to database field names
+                $cropData = [
+                    'municipality' => $validated['municipality'],
+                    'farm_type' => $validated['farm_type'],
+                    'year' => $validated['year'],
+                    'crop_name' => $validated['crop_name'],
+                    'area_planted' => $validated['area_planted'],
+                    'area_harvested' => $validated['area_harvested'],
+                    'production_mt' => $validated['production'],
+                    'productivity_mt_ha' => $validated['productivity'],
+                    // New suggested fields
+                    'cropID' => $validated['cropID'],
+                    'cropCategory' => $validated['cropCategory'] ?? $cropInfo['category'] ?? null,
+                    'cropDaysToMaturity' => $validated['cropDaysToMaturity'] ?? $cropInfo['days_to_maturity'] ?? null,
+                    'productionMonth' => $validated['productionMonth'],
+                    'productionFarmType' => $validated['productionFarmType'],
+                ];
+
+                $crop->update($cropData);
+
+                // Return JSON response for AJAX requests
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Crop updated successfully!',
+                        'crop' => $crop->fresh()
+                    ]);
+                }
+
+                return redirect()->route('admin.crops.index')->with('success', 'Crop updated successfully!');
+            } else {
+                // Old format - farmer crop data
+                $validated = $request->validate([
+                    'farmer_id' => 'required|exists:tblFarmers,farmerID',
+                    'name' => 'required|string|max:255',
+                    'variety' => 'nullable|string|max:255',
+                    'planting_date' => 'required|date',
+                    'expected_harvest_date' => 'nullable|date|after:planting_date',
+                    'area_hectares' => 'required|numeric|min:0.01|max:9999.99',
+                    'description' => 'nullable|string|max:1000',
+                    'expected_yield_kg' => 'nullable|numeric|min:0|max:99999999.99',
+                ]);
+
+                $crop->update($validated);
+
+                return redirect()->route('admin.crops.index')->with('success', 'Crop updated successfully!');
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            throw $e;
+        } catch (\Exception $e) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred: ' . $e->getMessage()
+                ], 500);
+            }
+            throw $e;
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Crop $crop)
+    public function destroy(Request $request, Crop $crop)
     {
-        $crop->delete(); // Soft delete (archive)
-        return redirect()->route('admin.crops.index')->with('success', 'Crop archived successfully!');
+        try {
+            $crop->delete(); // Soft delete (archive)
+            
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Crop archived successfully!'
+                ]);
+            }
+            
+            return redirect()->route('admin.crops.index')->with('success', 'Crop archived successfully!');
+        } catch (\Exception $e) {
+            // Return JSON response for AJAX requests
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'An error occurred while deleting the crop: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->route('admin.crops.index')->with('error', 'Failed to delete crop. Please try again.');
+        }
     }
 
     /**
@@ -507,5 +761,572 @@ class CropController extends Controller
         return response($csvContent)
             ->header('Content-Type', 'text/csv')
             ->header('Content-Disposition', 'attachment; filename="crop_import_template.csv"');
+    }
+
+    /**
+     * Get Benguet municipalities
+     */
+    private function getMunicipalities()
+    {
+        return collect([
+            'Atok', 'Bakun', 'Bokod', 'Buguias', 'Itogon', 
+            'Kabayan', 'Kapangan', 'Kibungan', 'La Trinidad', 
+            'Mankayan', 'Sablan', 'Tuba', 'Tublay'
+        ]);
+    }
+
+    /**
+     * Get highland crops
+     */
+    private function getHighlandCrops()
+    {
+        return collect([
+            'Cabbage', 'Carrots', 'Broccoli', 'Potato', 'Lettuce',
+            'Cauliflower', 'Bell Pepper', 'Onion', 'Tomato', 'Chinese Cabbage (Pechay)'
+        ]);
+    }
+
+    /**
+     * Get crop categories
+     */
+    private function getCropCategories()
+    {
+        return collect([
+            'Leafy Vegetables',
+            'Root Crops',
+            'Cruciferous Vegetables',
+            'Fruit Vegetables',
+            'Tuber Crops'
+        ]);
+    }
+
+    /**
+     * Get highland crops with their default data including categories and days to maturity
+     */
+    private function getHighlandCropsData()
+    {
+        return collect([
+            'Cabbage' => ['category' => 'Leafy Vegetables', 'days_to_maturity' => 70],
+            'Carrots' => ['category' => 'Root Crops', 'days_to_maturity' => 75],
+            'Broccoli' => ['category' => 'Cruciferous Vegetables', 'days_to_maturity' => 85],
+            'Potato' => ['category' => 'Tuber Crops', 'days_to_maturity' => 90],
+            'Lettuce' => ['category' => 'Leafy Vegetables', 'days_to_maturity' => 45],
+            'Cauliflower' => ['category' => 'Cruciferous Vegetables', 'days_to_maturity' => 80],
+            'Bell Pepper' => ['category' => 'Fruit Vegetables', 'days_to_maturity' => 75],
+            'Onion' => ['category' => 'Root Crops', 'days_to_maturity' => 120],
+            'Tomato' => ['category' => 'Fruit Vegetables', 'days_to_maturity' => 80],
+            'Chinese Cabbage (Pechay)' => ['category' => 'Leafy Vegetables', 'days_to_maturity' => 50]
+        ]);
+    }
+
+    // ======================
+    // API METHODS FOR CRUD
+    // ======================
+
+    /**
+     * API: Get all crops with pagination and filters
+     */
+    public function apiIndex(Request $request)
+    {
+        $perPage = $request->get('per_page', 15);
+        
+        // Validate per_page parameter
+        if (!in_array($perPage, [10, 15, 25, 50, 100])) {
+            $perPage = 15;
+        }
+        
+        // Build query with filters
+        $query = Crop::with('farmer');
+        
+        // Apply search filter
+        if ($request->filled('search')) {
+            $searchTerm = $request->get('search');
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('crop_name', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('municipality', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('year', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+        
+        // Apply municipality filter
+        if ($request->filled('municipality')) {
+            $query->where('municipality', $request->get('municipality'));
+        }
+        
+        // Apply crop filter
+        if ($request->filled('crop')) {
+            $query->where('crop_name', $request->get('crop'));
+        }
+        
+        // Apply sorting
+        if ($request->filled('sort')) {
+            $sortDirection = $request->get('sort') === 'desc' ? 'desc' : 'asc';
+            $query->orderBy('crop_name', $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+        
+        $crops = $query->paginate($perPage);
+        
+        return response()->json([
+            'success' => true,
+            'data' => $crops->items(),
+            'pagination' => [
+                'current_page' => $crops->currentPage(),
+                'per_page' => $crops->perPage(),
+                'total' => $crops->total(),
+                'last_page' => $crops->lastPage(),
+                'from' => $crops->firstItem(),
+                'to' => $crops->lastItem(),
+            ],
+            'reference_data' => [
+                'municipalities' => $this->getMunicipalities(),
+                'highland_crops' => $this->getHighlandCrops()
+            ]
+        ]);
+    }
+
+    /**
+     * API: Create a new crop
+     */
+    public function apiStore(Request $request)
+    {
+        try {
+            // Get standardized data
+            $municipalities = $this->getMunicipalities();
+            $highlandCrops = $this->getHighlandCrops();
+            $cropCategories = $this->getCropCategories();
+            
+            $validated = $request->validate([
+                'municipality' => ['required', 'string', Rule::in($municipalities->toArray())],
+                'farm_type' => 'required|string|in:irrigated,rainfed,upland,lowland',
+                'year' => 'required|integer|min:2000|max:2030',
+                'crop_name' => ['required', 'string', Rule::in($highlandCrops->toArray())],
+                'area_planted' => 'required|numeric|min:0.01|max:99999.99',
+                'area_harvested' => 'required|numeric|min:0.01|max:99999.99|lte:area_planted',
+                'production_mt' => 'required|numeric|min:0.01|max:99999999.99',
+                'productivity_mt_ha' => 'nullable|numeric|min:0|max:99999.99',
+                // New suggested fields
+                'cropID' => 'nullable|string|max:50|unique:crops,cropID',
+                'cropCategory' => ['nullable', 'string', Rule::in($cropCategories->toArray())],
+                'cropDaysToMaturity' => 'nullable|integer|min:1|max:365',
+                'productionMonth' => 'nullable|string|in:January,February,March,April,May,June,July,August,September,October,November,December',
+                'productionFarmType' => 'nullable|string|in:Irrigated,Rainfed',
+            ], [
+                'area_harvested.lte' => 'Area harvested cannot be greater than area planted.',
+            ]);
+
+            // Auto-populate category and days to maturity if not provided
+            $highlandCropsData = $this->getHighlandCropsData();
+            $cropInfo = $highlandCropsData->get($validated['crop_name'], []);
+            
+            $validated['cropCategory'] = $validated['cropCategory'] ?? $cropInfo['category'] ?? null;
+            $validated['cropDaysToMaturity'] = $validated['cropDaysToMaturity'] ?? $cropInfo['days_to_maturity'] ?? null;
+
+            $crop = Crop::create($validated);
+            $crop->load('farmer');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Crop created successfully!',
+                'data' => $crop
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API: Get a specific crop
+     */
+    public function apiShow(Crop $crop)
+    {
+        $crop->load('farmer');
+        
+        return response()->json([
+            'success' => true,
+            'data' => $crop
+        ]);
+    }
+
+    /**
+     * API: Update a specific crop
+     */
+    public function apiUpdate(Request $request, Crop $crop)
+    {
+        try {
+            // Get standardized data
+            $municipalities = $this->getMunicipalities();
+            $highlandCrops = $this->getHighlandCrops();
+            $cropCategories = $this->getCropCategories();
+            
+            $validated = $request->validate([
+                'municipality' => ['required', 'string', Rule::in($municipalities->toArray())],
+                'farm_type' => 'required|string|in:irrigated,rainfed,upland,lowland',
+                'year' => 'required|integer|min:2000|max:2030',
+                'crop_name' => ['required', 'string', Rule::in($highlandCrops->toArray())],
+                'area_planted' => 'required|numeric|min:0.01|max:99999.99',
+                'area_harvested' => 'required|numeric|min:0.01|max:99999.99|lte:area_planted',
+                'production_mt' => 'required|numeric|min:0.01|max:99999999.99',
+                'productivity_mt_ha' => 'nullable|numeric|min:0|max:99999.99',
+                // New suggested fields
+                'cropID' => 'nullable|string|max:50|unique:crops,cropID,' . $crop->id,
+                'cropCategory' => ['nullable', 'string', Rule::in($cropCategories->toArray())],
+                'cropDaysToMaturity' => 'nullable|integer|min:1|max:365',
+                'productionMonth' => 'nullable|string|in:January,February,March,April,May,June,July,August,September,October,November,December',
+                'productionFarmType' => 'nullable|string|in:Irrigated,Rainfed',
+            ], [
+                'area_harvested.lte' => 'Area harvested cannot be greater than area planted.',
+            ]);
+
+            // Auto-populate category and days to maturity if not provided
+            $highlandCropsData = $this->getHighlandCropsData();
+            $cropInfo = $highlandCropsData->get($validated['crop_name'], []);
+            
+            $validated['cropCategory'] = $validated['cropCategory'] ?? $cropInfo['category'] ?? null;
+            $validated['cropDaysToMaturity'] = $validated['cropDaysToMaturity'] ?? $cropInfo['days_to_maturity'] ?? null;
+
+            $crop->update($validated);
+            $crop->load('farmer');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Crop updated successfully!',
+                'data' => $crop
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API: Delete a specific crop
+     */
+    public function apiDestroy(Crop $crop)
+    {
+        try {
+            $crop->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Crop deleted successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while deleting the crop: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API: Delete multiple crops
+     */
+    public function apiBatchDelete(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'ids' => 'required|array|min:1',
+                'ids.*' => 'required|integer|exists:crops,id'
+            ]);
+
+            $deletedCount = Crop::whereIn('id', $validated['ids'])->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully deleted {$deletedCount} crop(s)",
+                'deleted_count' => $deletedCount
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * API: Search crops
+     */
+    public function apiSearch(Request $request, $term)
+    {
+        $query = Crop::with('farmer')
+            ->where(function($q) use ($term) {
+                $q->where('crop_name', 'LIKE', "%{$term}%")
+                  ->orWhere('municipality', 'LIKE', "%{$term}%")
+                  ->orWhere('year', 'LIKE', "%{$term}%");
+            })
+            ->orderBy('created_at', 'desc');
+
+        $crops = $query->paginate($request->get('per_page', 15));
+
+        return response()->json([
+            'success' => true,
+            'data' => $crops->items(),
+            'pagination' => [
+                'current_page' => $crops->currentPage(),
+                'per_page' => $crops->perPage(),
+                'total' => $crops->total(),
+                'last_page' => $crops->lastPage(),
+            ],
+            'search_term' => $term
+        ]);
+    }
+
+    /**
+     * API: Filter crops by municipality and crop
+     */
+    public function apiFilter(Request $request, $municipality, $crop = null)
+    {
+        $query = Crop::with('farmer')
+            ->where('municipality', $municipality);
+
+        if ($crop) {
+            $query->where('crop_name', $crop);
+        }
+
+        $crops = $query->orderBy('created_at', 'desc')
+            ->paginate($request->get('per_page', 15));
+
+        return response()->json([
+            'success' => true,
+            'data' => $crops->items(),
+            'pagination' => [
+                'current_page' => $crops->currentPage(),
+                'per_page' => $crops->perPage(),
+                'total' => $crops->total(),
+                'last_page' => $crops->lastPage(),
+            ],
+            'filters' => [
+                'municipality' => $municipality,
+                'crop' => $crop
+            ]
+        ]);
+    }
+
+    /**
+     * Get all production months
+     */
+    private function getProductionMonths()
+    {
+        return collect([
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ]);
+    }
+
+    /**
+     * Get all production farm types
+     */
+    private function getProductionFarmTypes()
+    {
+        return collect(['Irrigated', 'Rainfed']);
+    }
+
+    /**
+     * Delete all crops
+     */
+    public function deleteAll(Request $request)
+    {
+        try {
+            $totalCount = Crop::count();
+            
+            if ($totalCount === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No crops found to delete.'
+                ], 400);
+            }
+
+            // Delete all crops
+            Crop::truncate(); // This is faster than deleting one by one
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully deleted all {$totalCount} crops from the database.",
+                'deleted_count' => $totalCount
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Delete all crops error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while deleting all crops: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete all crops on current page
+     */
+    public function deletePage(Request $request)
+    {
+        try {
+            $request->validate([
+                'page' => 'required|integer|min:1',
+                'per_page' => 'required|integer|min:1|max:100'
+            ]);
+
+            $page = $request->input('page', 1);
+            $perPage = $request->input('per_page', 10);
+
+            // Get crops for the current page
+            $crops = Crop::paginate($perPage, ['*'], 'page', $page);
+            
+            if ($crops->count() === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No crops found on page ' . $page . ' to delete.'
+                ], 400);
+            }
+
+            // Get the IDs of crops on current page
+            $cropIds = $crops->pluck('id')->toArray();
+            $deletedCount = count($cropIds);
+            
+            // Delete crops on current page
+            Crop::whereIn('id', $cropIds)->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully deleted {$deletedCount} crops from page {$page}.",
+                'deleted_count' => $deletedCount,
+                'page' => $page
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Delete page crops error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while deleting crops from this page: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get all available farm types from the database
+     */
+    private function getFarmTypes()
+    {
+        return Crop::whereNotNull('farm_type')
+                   ->where('farm_type', '!=', '')
+                   ->distinct()
+                   ->pluck('farm_type')
+                   ->sort()
+                   ->values();
+    }
+
+    /**
+     * Get all available years from the database
+     */
+    private function getAvailableYears()
+    {
+        return Crop::whereNotNull('year')
+                   ->where('year', '>', 0)
+                   ->distinct()
+                   ->pluck('year')
+                   ->sort()
+                   ->reverse()
+                   ->values();
+    }
+
+    /**
+     * Get all available statuses from the database
+     */
+    private function getAvailableStatuses()
+    {
+        return Crop::whereNotNull('status')
+                   ->where('status', '!=', '')
+                   ->distinct()
+                   ->pluck('status')
+                   ->sort()
+                   ->values();
+    }
+
+    /**
+     * Get production ranges for filtering
+     */
+    private function getProductionRanges()
+    {
+        $stats = Crop::whereNotNull('production_mt')
+                     ->where('production_mt', '>', 0)
+                     ->selectRaw('MIN(production_mt) as min, MAX(production_mt) as max, AVG(production_mt) as avg')
+                     ->first();
+
+        if (!$stats) {
+            return ['min' => 0, 'max' => 100, 'avg' => 50];
+        }
+
+        return [
+            'min' => floor($stats->min),
+            'max' => ceil($stats->max),
+            'avg' => round($stats->avg, 2)
+        ];
+    }
+
+    /**
+     * Get area ranges for filtering
+     */
+    private function getAreaRanges()
+    {
+        $stats = Crop::whereNotNull('area_planted')
+                     ->where('area_planted', '>', 0)
+                     ->selectRaw('MIN(area_planted) as min, MAX(area_planted) as max, AVG(area_planted) as avg')
+                     ->first();
+
+        if (!$stats) {
+            return ['min' => 0, 'max' => 500, 'avg' => 50];
+        }
+
+        return [
+            'min' => floor($stats->min),
+            'max' => ceil($stats->max),
+            'avg' => round($stats->avg, 2)
+        ];
+    }
+
+    /**
+     * Get productivity ranges for filtering
+     */
+    private function getProductivityRanges()
+    {
+        $stats = Crop::whereNotNull('productivity_mt_ha')
+                     ->where('productivity_mt_ha', '>', 0)
+                     ->selectRaw('MIN(productivity_mt_ha) as min, MAX(productivity_mt_ha) as max, AVG(productivity_mt_ha) as avg')
+                     ->first();
+
+        if (!$stats) {
+            return ['min' => 0, 'max' => 50, 'avg' => 15];
+        }
+
+        return [
+            'min' => floor($stats->min),
+            'max' => ceil($stats->max),
+            'avg' => round($stats->avg, 2)
+        ];
     }
 }

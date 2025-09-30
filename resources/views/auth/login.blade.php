@@ -21,7 +21,9 @@
                         
                         <!-- Username Field -->
                         <div>
-                            <label for="username" class="block text-sm font-medium text-yellow-400 mb-2">Username</label>
+                            <label for="username" class="block text-sm font-medium text-yellow-400 mb-2">
+                                Username <span class="text-red-500">*</span>
+                            </label>
                             <input 
                                 type="text" 
                                 id="username" 
@@ -38,7 +40,9 @@
                         
                         <!-- Password Field -->
                         <div>
-                            <label for="password" class="block text-sm font-medium text-yellow-400 mb-2">Password</label>
+                            <label for="password" class="block text-sm font-medium text-yellow-400 mb-2">
+                                Password <span class="text-red-500">*</span>
+                            </label>
                             <input 
                                 type="password" 
                                 id="password" 
@@ -114,5 +118,78 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const usernameField = document.getElementById('username');
+            const passwordField = document.getElementById('password');
+
+            // Form validation
+            form.addEventListener('submit', function(e) {
+                let hasErrors = false;
+                
+                // Remove existing error styling
+                [usernameField, passwordField].forEach(field => {
+                    field.classList.remove('border-red-500');
+                    const errorMsg = field.parentElement.querySelector('.error-message');
+                    if (errorMsg) errorMsg.remove();
+                });
+
+                // Validate username
+                if (!usernameField.value.trim()) {
+                    showFieldError(usernameField, 'Username is required');
+                    hasErrors = true;
+                }
+
+                // Validate password
+                if (!passwordField.value.trim()) {
+                    showFieldError(passwordField, 'Password is required');
+                    hasErrors = true;
+                }
+
+                if (hasErrors) {
+                    e.preventDefault();
+                }
+            });
+
+            // Real-time validation
+            [usernameField, passwordField].forEach(field => {
+                field.addEventListener('blur', function() {
+                    if (!this.value.trim()) {
+                        showFieldError(this, this.name.charAt(0).toUpperCase() + this.name.slice(1) + ' is required');
+                    } else {
+                        clearFieldError(this);
+                    }
+                });
+
+                field.addEventListener('input', function() {
+                    if (this.value.trim()) {
+                        clearFieldError(this);
+                    }
+                });
+            });
+
+            function showFieldError(field, message) {
+                field.classList.add('border-red-500');
+                
+                // Remove existing error message
+                const existingError = field.parentElement.querySelector('.error-message');
+                if (existingError) existingError.remove();
+
+                // Add new error message
+                const errorDiv = document.createElement('p');
+                errorDiv.className = 'mt-1 text-sm text-yellow-200 error-message';
+                errorDiv.textContent = message;
+                field.parentElement.appendChild(errorDiv);
+            }
+
+            function clearFieldError(field) {
+                field.classList.remove('border-red-500');
+                const errorMsg = field.parentElement.querySelector('.error-message');
+                if (errorMsg) errorMsg.remove();
+            }
+        });
+    </script>
 </body>
 </html>

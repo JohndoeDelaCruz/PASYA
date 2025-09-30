@@ -36,6 +36,12 @@ class Crop extends Model
         'area_harvested',
         'production_mt',
         'productivity_mt_ha',
+        // Suggested new crop fields
+        'cropID',
+        'cropCategory',
+        'cropDaysToMaturity',
+        'productionMonth',
+        'productionFarmType',
     ];
 
     /**
@@ -50,6 +56,7 @@ class Crop extends Model
         'area_hectares' => 'decimal:2',
         'expected_yield_kg' => 'decimal:2',
         'actual_yield_kg' => 'decimal:2',
+        'cropDaysToMaturity' => 'integer',
     ];
 
     /**

@@ -1,5 +1,5 @@
 <!-- Sidebar -->
-<aside class="w-64 text-white flex flex-col shadow-lg" style="background-color: #28310D;">
+<aside class="w-64 bg-white flex flex-col shadow-lg" style="background-color: #28310D;">
     <div class="p-6 border-b" style="border-color: rgba(255, 255, 255, 0.2);">
         <div class="flex items-center space-x-3">
             <img src="{{ asset('images/PASYA.png') }}" alt="PASYA Logo" class="w-10 h-10 object-contain">
@@ -41,13 +41,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
                 </svg>
-                <span>Crop Management</span>
-            </a>
-            <a href="{{ route('admin.upload-data') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 mt-1 {{ $active === 'upload-data' ? 'text-yellow-400' : 'text-white' }}" style="{{ $active === 'upload-data' ? 'background-color: rgba(255, 255, 255, 0.1);' : '' }}" onmouseover="if (!this.classList.contains('{{ $active === 'upload-data' ? 'active' : '' }}')) this.style.backgroundColor='rgba(255, 255, 255, 0.1)'; this.style.color='#fbbf24';" onmouseout="if (!this.classList.contains('{{ $active === 'upload-data' ? 'active' : '' }}')) { this.style.backgroundColor=''; this.style.color='white'; }">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <span>Upload Data</span>
+                <span>Crop Production Management</span>
             </a>
             <a href="{{ route('admin.recommendations') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200 mt-1 {{ $active === 'recommendations' ? 'text-yellow-400' : 'text-white' }}" style="{{ $active === 'recommendations' ? 'background-color: rgba(255, 255, 255, 0.1);' : '' }}" onmouseover="if (!this.classList.contains('{{ $active === 'recommendations' ? 'active' : '' }}')) this.style.backgroundColor='rgba(255, 255, 255, 0.1)'; this.style.color='#fbbf24';" onmouseout="if (!this.classList.contains('{{ $active === 'recommendations' ? 'active' : '' }}')) { this.style.backgroundColor=''; this.style.color='white'; }">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

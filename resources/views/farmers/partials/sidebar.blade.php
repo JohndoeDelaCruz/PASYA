@@ -30,9 +30,9 @@
             </div>
         </div>
 
-        <!-- Crop Management Section -->
+        <!-- Crop Production Management Section -->
         <div>
-            <p class="text-xs text-green-300 uppercase tracking-wider mb-3 font-semibold">Crop Management</p>
+            <p class="text-xs text-green-300 uppercase tracking-wider mb-3 font-semibold">Crop Production Management</p>
             <div class="space-y-1">
                 <a href="{{ route('farmer.harvest-history') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ $active === 'harvest-history' ? 'bg-yellow-500 text-green-800' : 'text-white hover:bg-green-700 hover:text-yellow-400' }} transition-all duration-200">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

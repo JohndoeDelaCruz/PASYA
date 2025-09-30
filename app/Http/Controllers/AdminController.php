@@ -112,45 +112,23 @@ class AdminController extends Controller
                         ->paginate($request->get('per_page', 10))
                         ->appends($request->query());
 
-        // Get unique municipalities for filter dropdown
-        $municipalities = Farmer::whereNotNull('farmerLocation')
-                               ->distinct()
-                               ->pluck('farmerLocation')
-                               ->sort()
-                               ->values();
+        // Benguet's 13 municipalities
+        $municipalities = collect([
+            'Atok', 'Bakun', 'Bokod', 'Buguias', 'Itogon', 
+            'Kabayan', 'Kapangan', 'Kibungan', 'La Trinidad', 
+            'Mankayan', 'Sablan', 'Tuba', 'Tublay'
+        ]);
 
-        // Get unique cooperatives for filter dropdown
-        $cooperatives = Farmer::whereNotNull('farmerCooperative')
-                             ->distinct()
-                             ->pluck('farmerCooperative')
-                             ->sort()
-                             ->values();
+        // Benguet cooperatives list
+        $cooperatives = collect([
+            'Benguet Highland Farmers Cooperative',
+            'La Trinidad Vegetable Growers Association',
+            'Northern Benguet Agri Cooperative',
+            'Kabayan Organic Farmers Cooperative',
+            'Tuba Agro-Enterprise Cooperative'
+        ]);
 
         return view('admin.CreateAccount', compact('farmers', 'municipalities', 'cooperatives'));
-    }
-
-    public function uploadData(Request $request)
-    {
-        if ($request->isMethod('post')) {
-            // Handle file upload
-            $request->validate([
-                'data_file' => 'required|file|mimes:csv,xlsx,json|max:10240', // 10MB max
-                'data_type' => 'required|string',
-                'description' => 'nullable|string|max:500',
-            ]);
-
-            // Store the file
-            $file = $request->file('data_file');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('uploads/data', $filename, 'public');
-
-            // Here you would typically save file info to database
-            // For now, just redirect with success message
-
-            return redirect()->route('admin.upload-data')->with('success', 'Data file uploaded successfully!');
-        }
-
-        return view('admin.UploadData');
     }
 
     public function recommendations()

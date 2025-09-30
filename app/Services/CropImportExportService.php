@@ -67,14 +67,138 @@ class CropImportExportService
     }
 
     /**
+     * Calculate median values for numeric fields from existing crop data
+     */
+    private function calculateMedianValues(): array
+    {
+        $medianValues = [];
+        
+        // Get all existing crop data for median calculation (exclude zero/null values)
+        $existingCrops = Crop::whereNotNull('area_planted')
+            ->whereNotNull('area_harvested')
+            ->whereNotNull('production_mt')
+            ->whereNotNull('productivity_mt_ha')
+            ->where('area_planted', '>', 0)
+            ->where('area_harvested', '>', 0)
+            ->where('production_mt', '>', 0)
+            ->where('productivity_mt_ha', '>', 0)
+            ->get();
+
+        if ($existingCrops->count() > 0) {
+            // Calculate median for area_planted
+            $areaPlantedValues = $existingCrops->pluck('area_planted')->sort()->values();
+            $medianValues['area_planted'] = $this->calculateMedian($areaPlantedValues->toArray());
+
+            // Calculate median for area_harvested
+            $areaHarvestedValues = $existingCrops->pluck('area_harvested')->sort()->values();
+            $medianValues['area_harvested'] = $this->calculateMedian($areaHarvestedValues->toArray());
+
+            // Calculate median for production
+            $productionValues = $existingCrops->pluck('production_mt')->sort()->values();
+            $medianValues['production'] = $this->calculateMedian($productionValues->toArray());
+
+            // Calculate median for productivity
+            $productivityValues = $existingCrops->pluck('productivity_mt_ha')->sort()->values();
+            $medianValues['productivity'] = $this->calculateMedian($productivityValues->toArray());
+        } else {
+            // Fallback default values if no existing data (based on typical Philippine agriculture)
+            $medianValues = [
+                'area_planted' => 1.5,   // 1.5 hectares (typical small farm size)
+                'area_harvested' => 1.4,  // Slightly less than planted due to losses
+                'production' => 12.0,     // 12 metric tons (reasonable vegetable production)
+                'productivity' => 8.5     // 8.5 mt/ha (typical vegetable yield)
+            ];
+        }
+
+        return $medianValues;
+    }
+
+    /**
+     * Calculate median from an array of values
+     */
+    private function calculateMedian(array $values): float
+    {
+        $count = count($values);
+        if ($count === 0) return 0.0;
+        
+        sort($values, SORT_NUMERIC);
+        
+        if ($count % 2 === 0) {
+            // Even number of values - average of two middle values
+            return ($values[$count / 2 - 1] + $values[$count / 2]) / 2;
+        } else {
+            // Odd number of values - middle value
+            return $values[floor($count / 2)];
+        }
+    }
+
+    /**
+     * Apply median imputation to row data for missing numeric values
+     */
+    private function applyMedianImputation(array $rowData, array $medianValues): array
+    {
+        // Numeric fields that should use median imputation
+        $numericFields = [
+            'area_planted' => 'area_planted',
+            'area_harvested' => 'area_harvested', 
+            'production' => 'production',
+            'productivity' => 'productivity'
+        ];
+        
+        foreach ($numericFields as $field => $medianKey) {
+            $value = trim($rowData[$field] ?? '');
+            
+            // Check if value is empty, null, or invalid
+            if (empty($value) || 
+                $value === 'null' || 
+                $value === 'n/a' || 
+                $value === 'N/A' ||
+                !is_numeric($value) || 
+                floatval($value) <= 0) {
+                
+                $rowData[$field] = $medianValues[$medianKey];
+            } else {
+                $rowData[$field] = floatval($value);
+            }
+        }
+        
+        return $rowData;
+    }
+
+    /**
+     * Handle year value with appropriate default
+     */
+    private function handleYearValue($year): int
+    {
+        $year = trim($year ?? '');
+        
+        if (empty($year) || $year === 'null' || !is_numeric($year)) {
+            return (int) date('Y'); // Current year
+        }
+        
+        $yearInt = (int) $year;
+        
+        // Validate year range (reasonable agricultural data range)
+        if ($yearInt < 2000 || $yearInt > 2030) {
+            return (int) date('Y');
+        }
+        
+        return $yearInt;
+    }
+
+    /**
      * Import crops from CSV file
      */
     public function importFromCsv(UploadedFile $file): array
     {
+        // Calculate median values at the start of import
+        $medianValues = $this->calculateMedianValues();
+        
         $results = [
             'success' => 0,
             'errors' => 0,
-            'messages' => []
+            'messages' => [],
+            'median_values_used' => $medianValues
         ];
 
         if (!$file->isValid()) {
@@ -146,6 +270,10 @@ class CropImportExportService
                     foreach ($normalizedHeaders as $colIndex => $header) {
                         $rowData[$header] = trim($row[$colIndex] ?? '');
                     }
+                    
+                    // Apply median imputation for missing numeric values
+                    $rowData = $this->applyMedianImputation($rowData, $medianValues);
+                    
                     $processedData = $this->prepareCsvRowNewFormat($rowData, $rowNumber);
                 } else {
                     $processedData = $this->prepareCsvRowOldFormat($row, $rowNumber);
@@ -369,28 +497,46 @@ class CropImportExportService
      */
     protected function processExcelRowNewFormat(array $rowData, int $rowNumber): void
     {
-        // Map Excel columns to database fields
+        // Calculate median values for this processing
+        $medianValues = $this->calculateMedianValues();
+        
+        // Apply median imputation for missing numeric values
+        $rowData = $this->applyMedianImputation($rowData, $medianValues);
+        
+        // Handle farm_type with default
+        $farmType = strtolower(trim($rowData['farm_type'] ?? $rowData['farmtype'] ?? ''));
+        if (empty($farmType) || $farmType === 'null' || $farmType === 'n/a') {
+            $farmType = 'rainfed'; // Default to rainfed as it's most common
+        }
+        
+        // Helper function to handle empty text values
+        $handleEmptyTextValue = function($value, $default = 'N/A') {
+            $trimmed = trim($value ?? '');
+            return (empty($trimmed) || $trimmed === 'null') ? $default : $trimmed;
+        };
+        
         $data = [
-            'municipality' => $rowData['municipality'] ?? '',
-            'crop_name' => $rowData['crop_name'] ?? $rowData['crop'] ?? '',
-            'farm_type' => $rowData['farm_type'] ?? $rowData['farmtype'] ?? '',
-            'year' => $rowData['year'] ?? '',
-            'area_planted' => $rowData['area_planted'] ?? $rowData['area planted'] ?? '',
-            'area_harvested' => $rowData['area_harvested'] ?? $rowData['area harvested'] ?? '',
-            'production' => $rowData['production'] ?? $rowData['production_mt'] ?? '',
-            'productivity' => $rowData['productivity'] ?? $rowData['productivity_mt_ha'] ?? null,
+            'municipality' => $handleEmptyTextValue($rowData['municipality'] ?? ''),
+            'crop_name' => $handleEmptyTextValue($rowData['crop_name'] ?? $rowData['crop'] ?? ''),
+            'farm_type' => $farmType,
+            'year' => $this->handleYearValue($rowData['year'] ?? ''),
+            // Numeric values are already processed by median imputation
+            'area_planted' => $rowData['area_planted'],
+            'area_harvested' => $rowData['area_harvested'],
+            'production' => $rowData['production'],
+            'productivity' => $rowData['productivity'],
         ];
 
-        // Validate data
+        // Validate data with updated rules to allow N/A and default values
         $validator = Validator::make($data, [
             'municipality' => 'required|string|max:255',
             'crop_name' => 'required|string|max:255',
             'farm_type' => 'required|string|in:irrigated,rainfed,upland,lowland',
             'year' => 'required|integer|min:2000|max:2030',
-            'area_planted' => 'required|numeric|min:0.01|max:99999.99',
-            'area_harvested' => 'required|numeric|min:0.01|max:99999.99',
-            'production' => 'required|numeric|min:0.01|max:99999999.99',
-            'productivity' => 'nullable|numeric|min:0|max:99999.99',
+            'area_planted' => 'required|numeric|min:0|max:99999.99',
+            'area_harvested' => 'required|numeric|min:0|max:99999.99',
+            'production' => 'required|numeric|min:0|max:99999999.99',
+            'productivity' => 'required|numeric|min:0|max:99999.99',
         ]);
 
         if ($validator->fails()) {
@@ -416,30 +562,46 @@ class CropImportExportService
      */
     protected function processCsvRowNewFormat(array $rowData, int $rowNumber): void
     {
-        // Map CSV columns to database fields (same logic as Excel processing)
+        // Calculate median values for this processing
+        $medianValues = $this->calculateMedianValues();
+        
+        // Apply median imputation for missing numeric values
+        $rowData = $this->applyMedianImputation($rowData, $medianValues);
+        
+        // Handle farm_type with default
+        $farmType = strtolower(trim($rowData['farm_type'] ?? $rowData['farmtype'] ?? ''));
+        if (empty($farmType) || $farmType === 'null' || $farmType === 'n/a') {
+            $farmType = 'rainfed'; // Default to rainfed as it's most common
+        }
+        
+        // Helper function to handle empty text values
+        $handleEmptyTextValue = function($value, $default = 'N/A') {
+            $trimmed = trim($value ?? '');
+            return (empty($trimmed) || $trimmed === 'null') ? $default : $trimmed;
+        };
+        
         $data = [
-            'municipality' => $rowData['municipality'] ?? '',
-            'crop_name' => $rowData['crop_name'] ?? $rowData['crop'] ?? '',
-            'farm_type' => strtolower(trim($rowData['farm_type'] ?? $rowData['farmtype'] ?? '')),
-            'year' => $rowData['year'] ?? '',
-            'area_planted' => $rowData['area_planted'] ?? $rowData['area planted'] ?? '',
-            'area_harvested' => $rowData['area_harvested'] ?? $rowData['area harvested'] ?? '',
-            'production' => $rowData['production'] ?? $rowData['production_mt'] ?? '',
-            'productivity' => $rowData['productivity'] ?? $rowData['productivity_mt_ha'] ?? null,
+            'municipality' => $handleEmptyTextValue($rowData['municipality'] ?? ''),
+            'crop_name' => $handleEmptyTextValue($rowData['crop_name'] ?? $rowData['crop'] ?? ''),
+            'farm_type' => $farmType,
+            'year' => $this->handleYearValue($rowData['year'] ?? ''),
+            // Numeric values are already processed by median imputation
+            'area_planted' => $rowData['area_planted'],
+            'area_harvested' => $rowData['area_harvested'],
+            'production' => $rowData['production'],
+            'productivity' => $rowData['productivity'],
         ];
 
-
-
-        // Validate data
+        // Validate data with updated rules to allow N/A and default values
         $validator = Validator::make($data, [
             'municipality' => 'required|string|max:255',
             'crop_name' => 'required|string|max:255',
             'farm_type' => 'required|string|in:irrigated,rainfed,upland,lowland',
             'year' => 'required|integer|min:2000|max:2030',
-            'area_planted' => 'required|numeric|min:0.01|max:99999.99',
-            'area_harvested' => 'required|numeric|min:0.01|max:99999.99',
-            'production' => 'required|numeric|min:0.01|max:99999999.99',
-            'productivity' => 'nullable|numeric|min:0|max:99999.99',
+            'area_planted' => 'required|numeric|min:0|max:99999.99',
+            'area_harvested' => 'required|numeric|min:0|max:99999.99',
+            'production' => 'required|numeric|min:0|max:99999999.99',
+            'productivity' => 'required|numeric|min:0|max:99999.99',
         ]);
 
         if ($validator->fails()) {
@@ -552,31 +714,44 @@ class CropImportExportService
 
     /**
      * Prepare CSV row data for new format (agricultural statistics) without inserting
+     * Note: Numeric values are already handled by median imputation in applyMedianImputation()
      */
     protected function prepareCsvRowNewFormat(array $rowData, int $rowNumber): ?array
     {
-        // Map CSV columns to database fields (same logic as Excel processing)
+        // Handle farm_type with default
+        $farmType = strtolower(trim($rowData['farm_type'] ?? $rowData['farmtype'] ?? ''));
+        if (empty($farmType) || $farmType === 'null' || $farmType === 'n/a') {
+            $farmType = 'rainfed'; // Default to rainfed as it's most common
+        }
+        
+        // Helper function to handle empty text values
+        $handleEmptyTextValue = function($value, $default = 'N/A') {
+            $trimmed = trim($value ?? '');
+            return (empty($trimmed) || $trimmed === 'null') ? $default : $trimmed;
+        };
+        
         $data = [
-            'municipality' => $rowData['municipality'] ?? '',
-            'crop_name' => $rowData['crop_name'] ?? $rowData['crop'] ?? '',
-            'farm_type' => strtolower(trim($rowData['farm_type'] ?? $rowData['farmtype'] ?? '')),
-            'year' => $rowData['year'] ?? '',
-            'area_planted' => $rowData['area_planted'] ?? $rowData['area planted'] ?? '',
-            'area_harvested' => $rowData['area_harvested'] ?? $rowData['area harvested'] ?? '',
-            'production' => $rowData['production'] ?? $rowData['production_mt'] ?? '',
-            'productivity' => $rowData['productivity'] ?? $rowData['productivity_mt_ha'] ?? null,
+            'municipality' => $handleEmptyTextValue($rowData['municipality'] ?? ''),
+            'crop_name' => $handleEmptyTextValue($rowData['crop_name'] ?? $rowData['crop'] ?? ''),
+            'farm_type' => $farmType,
+            'year' => $this->handleYearValue($rowData['year'] ?? ''),
+            // Numeric values are already processed by median imputation
+            'area_planted' => $rowData['area_planted'],
+            'area_harvested' => $rowData['area_harvested'],
+            'production' => $rowData['production'],
+            'productivity' => $rowData['productivity'],
         ];
 
-        // Validate data
+        // Validate data with updated rules to allow N/A and default values
         $validator = Validator::make($data, [
             'municipality' => 'required|string|max:255',
             'crop_name' => 'required|string|max:255',
             'farm_type' => 'required|string|in:irrigated,rainfed,upland,lowland',
             'year' => 'required|integer|min:2000|max:2030',
-            'area_planted' => 'required|numeric|min:0.01|max:99999.99',
-            'area_harvested' => 'required|numeric|min:0.01|max:99999.99',
-            'production' => 'required|numeric|min:0.01|max:99999999.99',
-            'productivity' => 'nullable|numeric|min:0|max:99999.99',
+            'area_planted' => 'required|numeric|min:0|max:99999.99',
+            'area_harvested' => 'required|numeric|min:0|max:99999.99',
+            'production' => 'required|numeric|min:0|max:99999999.99',
+            'productivity' => 'required|numeric|min:0|max:99999.99',
         ]);
 
         if ($validator->fails()) {

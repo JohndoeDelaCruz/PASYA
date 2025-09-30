@@ -6,6 +6,47 @@
     <title>Farmer Account Management - PASYA Admin</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Required field styling */
+        .required-field label::after {
+            content: " *";
+            color: #ef4444;
+            font-weight: bold;
+        }
+        
+        /* Error state styling */
+        .border-red-500 {
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+        
+        .error-message {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Focus states for better UX */
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Success state styling */
+        .border-green-500 {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <div class="flex h-screen">
@@ -283,44 +324,61 @@
                 <form id="addFarmerForm" class="p-6 space-y-4">
                     @csrf
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Full Name <span class="text-red-500">*</span>
+                        </label>
                         <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Username <span class="text-red-500">*</span>
+                        </label>
                         <input type="text" name="username" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" onblur="generateUsernameIfEmpty()">
                         <p class="text-xs text-gray-500 mt-1">Username must be unique. Leave empty to auto-generate from full name.</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Password <span class="text-red-500">*</span>
+                        </label>
                         <input type="password" name="password" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Confirm Password <span class="text-red-500">*</span>
+                        </label>
                         <input type="password" name="password_confirmation" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Municipality</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Municipality <span class="text-red-500">*</span>
+                        </label>
                         <select name="municipality" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="">Select Municipality</option>
-                            <option value="ATOK">ATOK</option>
-                            <option value="BAKUN">BAKUN</option>
-                            <option value="BOKOD">BOKOD</option>
-                            <option value="BUGUIAS">BUGUIAS</option>
-                            <option value="ITOGON">ITOGON</option>
-                            <option value="KABAYAN">KABAYAN</option>
-                            <option value="KAPANGAN">KAPANGAN</option>
-                            <option value="KIBUNGAN">KIBUNGAN</option>
-                            <option value="LA TRINIDAD">LA TRINIDAD</option>
-                            <option value="MANKAYAN">MANKAYAN</option>
-                            <option value="SABLAN">SABLAN</option>
-                            <option value="TUBA">TUBA</option>
-                            <option value="TUBLAY">TUBLAY</option>
+                            <option value="Atok">Atok</option>
+                            <option value="Bakun">Bakun</option>
+                            <option value="Bokod">Bokod</option>
+                            <option value="Buguias">Buguias</option>
+                            <option value="Itogon">Itogon</option>
+                            <option value="Kabayan">Kabayan</option>
+                            <option value="Kapangan">Kapangan</option>
+                            <option value="Kibungan">Kibungan</option>
+                            <option value="La Trinidad">La Trinidad</option>
+                            <option value="Mankayan">Mankayan</option>
+                            <option value="Sablan">Sablan</option>
+                            <option value="Tuba">Tuba</option>
+                            <option value="Tublay">Tublay</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Cooperative</label>
-                        <input type="text" name="cooperative" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <select name="cooperative" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Select Cooperative (Optional)</option>
+                            <option value="Benguet Highland Farmers Cooperative">Benguet Highland Farmers Cooperative</option>
+                            <option value="La Trinidad Vegetable Growers Association">La Trinidad Vegetable Growers Association</option>
+                            <option value="Northern Benguet Agri Cooperative">Northern Benguet Agri Cooperative</option>
+                            <option value="Kabayan Organic Farmers Cooperative">Kabayan Organic Farmers Cooperative</option>
+                            <option value="Tuba Agro-Enterprise Cooperative">Tuba Agro-Enterprise Cooperative</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
@@ -349,7 +407,9 @@
                 <form id="batchImportForm" class="p-6 space-y-4" enctype="multipart/form-data">
                     @csrf
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Upload CSV File</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Upload CSV File <span class="text-red-500">*</span>
+                        </label>
                         <input type="file" name="csv_file" accept=".csv" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <p class="text-xs text-gray-500 mt-1">Upload a CSV file with farmer data</p>
                     </div>
@@ -378,11 +438,15 @@
                     @method('PUT')
                     <input type="hidden" name="farmer_id" id="editFarmerId">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Full Name <span class="text-red-500">*</span>
+                        </label>
                         <input type="text" name="name" id="editName" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Username <span class="text-red-500">*</span>
+                        </label>
                         <input type="text" name="username" id="editUsername" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                         <p class="text-xs text-gray-500 mt-1">Username must be unique.</p>
                     </div>
@@ -396,27 +460,36 @@
                         <input type="password" name="password_confirmation" id="editPasswordConfirmation" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Municipality</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Municipality <span class="text-red-500">*</span>
+                        </label>
                         <select name="municipality" id="editMunicipality" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                             <option value="">Select Municipality</option>
-                            <option value="ATOK">ATOK</option>
-                            <option value="BAKUN">BAKUN</option>
-                            <option value="BOKOD">BOKOD</option>
-                            <option value="BUGUIAS">BUGUIAS</option>
-                            <option value="ITOGON">ITOGON</option>
-                            <option value="KABAYAN">KABAYAN</option>
-                            <option value="KAPANGAN">KAPANGAN</option>
-                            <option value="KIBUNGAN">KIBUNGAN</option>
-                            <option value="LA TRINIDAD">LA TRINIDAD</option>
-                            <option value="MANKAYAN">MANKAYAN</option>
-                            <option value="SABLAN">SABLAN</option>
-                            <option value="TUBA">TUBA</option>
-                            <option value="TUBLAY">TUBLAY</option>
+                            <option value="Atok">Atok</option>
+                            <option value="Bakun">Bakun</option>
+                            <option value="Bokod">Bokod</option>
+                            <option value="Buguias">Buguias</option>
+                            <option value="Itogon">Itogon</option>
+                            <option value="Kabayan">Kabayan</option>
+                            <option value="Kapangan">Kapangan</option>
+                            <option value="Kibungan">Kibungan</option>
+                            <option value="La Trinidad">La Trinidad</option>
+                            <option value="Mankayan">Mankayan</option>
+                            <option value="Sablan">Sablan</option>
+                            <option value="Tuba">Tuba</option>
+                            <option value="Tublay">Tublay</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Cooperative</label>
-                        <input type="text" name="cooperative" id="editCooperative" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <select name="cooperative" id="editCooperative" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Select Cooperative (Optional)</option>
+                            <option value="Benguet Highland Farmers Cooperative">Benguet Highland Farmers Cooperative</option>
+                            <option value="La Trinidad Vegetable Growers Association">La Trinidad Vegetable Growers Association</option>
+                            <option value="Northern Benguet Agri Cooperative">Northern Benguet Agri Cooperative</option>
+                            <option value="Kabayan Organic Farmers Cooperative">Kabayan Organic Farmers Cooperative</option>
+                            <option value="Tuba Agro-Enterprise Cooperative">Tuba Agro-Enterprise Cooperative</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Contact Number</label>
@@ -811,6 +884,176 @@
                 });
             }
         }
+
+        // Form validation for Add Farmer Modal
+        document.getElementById('addFarmerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Clear previous errors
+            clearFormErrors('addFarmerForm');
+            
+            let hasErrors = false;
+            const form = this;
+            
+            // Required field validation
+            const requiredFields = [
+                { name: 'name', label: 'Full Name' },
+                { name: 'username', label: 'Username' },
+                { name: 'password', label: 'Password' },
+                { name: 'password_confirmation', label: 'Confirm Password' },
+                { name: 'municipality', label: 'Municipality' }
+            ];
+            
+            requiredFields.forEach(field => {
+                const input = form.querySelector(`[name="${field.name}"]`);
+                if (!input.value.trim()) {
+                    showFieldError(input, `${field.label} is required`);
+                    hasErrors = true;
+                }
+            });
+            
+            // Password confirmation validation
+            const password = form.querySelector('[name="password"]').value;
+            const passwordConfirmation = form.querySelector('[name="password_confirmation"]').value;
+            
+            if (password && passwordConfirmation && password !== passwordConfirmation) {
+                showFieldError(form.querySelector('[name="password_confirmation"]'), 'Passwords do not match');
+                hasErrors = true;
+            }
+            
+            // Username format validation
+            const username = form.querySelector('[name="username"]').value;
+            if (username && !/^[a-zA-Z0-9_]+$/.test(username)) {
+                showFieldError(form.querySelector('[name="username"]'), 'Username can only contain letters, numbers, and underscores');
+                hasErrors = true;
+            }
+            
+            if (!hasErrors) {
+                // Submit form via AJAX (existing functionality)
+                addFarmer();
+            }
+        });
+
+        // Form validation for Edit Farmer Modal
+        document.getElementById('editFarmerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Clear previous errors
+            clearFormErrors('editFarmerForm');
+            
+            let hasErrors = false;
+            const form = this;
+            
+            // Required field validation
+            const requiredFields = [
+                { name: 'name', label: 'Full Name' },
+                { name: 'username', label: 'Username' },
+                { name: 'municipality', label: 'Municipality' }
+            ];
+            
+            requiredFields.forEach(field => {
+                const input = form.querySelector(`[name="${field.name}"]`);
+                if (!input.value.trim()) {
+                    showFieldError(input, `${field.label} is required`);
+                    hasErrors = true;
+                }
+            });
+            
+            // Password confirmation validation (only if password is provided)
+            const password = form.querySelector('[name="password"]').value;
+            const passwordConfirmation = form.querySelector('[name="password_confirmation"]').value;
+            
+            if (password && password !== passwordConfirmation) {
+                showFieldError(form.querySelector('[name="password_confirmation"]'), 'Passwords do not match');
+                hasErrors = true;
+            }
+            
+            // Username format validation
+            const username = form.querySelector('[name="username"]').value;
+            if (username && !/^[a-zA-Z0-9_]+$/.test(username)) {
+                showFieldError(form.querySelector('[name="username"]'), 'Username can only contain letters, numbers, and underscores');
+                hasErrors = true;
+            }
+            
+            if (!hasErrors) {
+                // Submit form via AJAX (existing functionality)
+                updateFarmer();
+            }
+        });
+
+        // Form validation for Batch Import
+        document.getElementById('batchImportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Clear previous errors
+            clearFormErrors('batchImportForm');
+            
+            let hasErrors = false;
+            const fileInput = this.querySelector('[name="csv_file"]');
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showFieldError(fileInput, 'Please select a CSV file to upload');
+                hasErrors = true;
+            } else {
+                const file = fileInput.files[0];
+                const allowedTypes = ['text/csv', 'application/csv', 'text/plain'];
+                
+                if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.csv')) {
+                    showFieldError(fileInput, 'Please select a valid CSV file');
+                    hasErrors = true;
+                }
+            }
+            
+            if (!hasErrors) {
+                // Submit form via AJAX (existing functionality)
+                batchImportFarmers();
+            }
+        });
+
+        // Utility functions for form validation
+        function showFieldError(field, message) {
+            field.classList.add('border-red-500');
+            
+            // Remove existing error message
+            const existingError = field.parentElement.querySelector('.error-message');
+            if (existingError) existingError.remove();
+            
+            // Add new error message
+            const errorDiv = document.createElement('p');
+            errorDiv.className = 'mt-1 text-sm text-red-600 error-message';
+            errorDiv.textContent = message;
+            field.parentElement.appendChild(errorDiv);
+        }
+
+        function clearFieldError(field) {
+            field.classList.remove('border-red-500');
+            const errorMsg = field.parentElement.querySelector('.error-message');
+            if (errorMsg) errorMsg.remove();
+        }
+
+        function clearFormErrors(formId) {
+            const form = document.getElementById(formId);
+            const fields = form.querySelectorAll('input, select, textarea');
+            fields.forEach(field => clearFieldError(field));
+        }
+
+        // Real-time validation
+        document.addEventListener('input', function(e) {
+            if (e.target.matches('input[required], select[required], textarea[required]')) {
+                if (e.target.value.trim()) {
+                    clearFieldError(e.target);
+                }
+            }
+        });
+
+        document.addEventListener('blur', function(e) {
+            if (e.target.matches('input[required], select[required], textarea[required]')) {
+                if (!e.target.value.trim()) {
+                    const label = e.target.parentElement.querySelector('label').textContent.replace('*', '').trim();
+                    showFieldError(e.target, `${label} is required`);
+                }
+            }
+        }, true);
     </script>
 </body>
 </html>
