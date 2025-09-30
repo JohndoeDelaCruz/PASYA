@@ -3,15 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendar - Farmer Panel</title>
+    <title>Calendar - PASYA</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Sidebar Layout Fix */
+        @media (min-width: 1024px) {
+            #mobileSidebar {
+                transform: translateX(0) !important;
+                display: flex !important;
+            }
+        }
+        
+        /* Mobile sidebar overlay */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 35;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease-in-out;
+        }
+        
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        @media (min-width: 1024px) {
+            .sidebar-overlay {
+                display: none;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 h-screen overflow-hidden">
-    <div class="flex h-full">
+<body class="bg-gray-100 min-h-screen">
+    <div class="min-h-screen">
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-35 hidden lg:hidden" onclick="closeMobileSidebar()"></div>
+        
         @include('farmers.partials.sidebar', ['active' => 'calendar'])
 
         <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="pl-64">
             <!-- Header -->
             <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center justify-between">
@@ -102,6 +138,23 @@
         function toggleDropdown() {
             const dropdown = document.getElementById('profileDropdown');
             dropdown.classList.toggle('hidden');
+        }
+
+        // Mobile sidebar toggle functionality
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('active');
+        }
+
+        function closeMobileSidebar() {
+            const sidebar = document.getElementById('mobileSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.remove('active');
         }
 
         // Close dropdown when clicking outside

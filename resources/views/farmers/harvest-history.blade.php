@@ -5,19 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Harvest History & Crop List - Farmer Panel</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Sidebar Layout Fix */
+        @media (min-width: 1024px) {
+            #mobileSidebar {
+                transform: translateX(0) !important;
+                display: flex !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 h-screen overflow-hidden">
-    <div class="flex h-full">
+<body class="bg-gray-100 min-h-screen">
+    <div class="min-h-screen">
+        <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-35 hidden lg:hidden" onclick="closeMobileSidebar()"></div>
+        
         @include('farmers.partials.sidebar', ['active' => 'harvest-history'])
 
         <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
-            <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-                <div class="flex items-center justify-between">
-                    <!-- Left: Logo/Text -->
-                    <div class="flex items-center space-x-3">
-                        <img src="{{ asset('images/PASYA.png') }}" alt="PASYA Logo" class="w-8 h-8 object-contain">
+        <div class="pl-64">
+        <!-- Page Banner with Controls -->
+        <div class="bg-white shadow-sm border-b border-gray-200 px-6 py-6">
+            <div class="flex items-center justify-between">
+                <!-- Left: Logo/Text -->
+                <div class="flex items-center space-x-3">
+                    <img src="{{ asset('images/PASYA.png') }}" alt="PASYA Logo" class="w-8 h-8 object-contain">
                         <div>
                             <h1 class="text-lg font-semibold text-green-800">PASYA</h1>
                             <p class="text-xs text-green-600">Agriculture Platform</p>
@@ -73,15 +84,15 @@
                         </div>
                     </div>
                 </div>
-            </header>
+        </div>
 
-            <!-- Content Area -->
-            <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
-                <!-- Page Title -->
-                <div class="mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900">Harvest History & Crop List</h2>
-                    <p class="text-gray-600 mt-1">Track your harvest records and manage crop data</p>
-                </div>
+        <!-- Content Area -->
+        <main class="p-6 space-y-4 bg-gray-50 min-h-screen">
+            <!-- Page Title -->
+            <div class="mb-4">
+                <h2 class="text-2xl font-bold text-gray-900">Harvest History & Crop List</h2>
+                <p class="text-gray-600 mt-1">Track your harvest records and manage crop data</p>
+            </div>
 
                 <!-- Main Content Area (Empty for now) -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
