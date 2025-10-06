@@ -6,12 +6,14 @@
     <title>Crop Trends & Patterns - Admin Panel</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-50 h-screen overflow-hidden">
-    <div class="flex h-full">
+<body class="bg-gray-50 min-h-screen">
+    <div class="flex">
         @include('admin.partials.sidebar', ['active' => 'crop-trends'])
-
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col overflow-hidden">
+        
+        <!-- Main Content Container -->
+        <div class="flex-1 ml-64 min-h-screen">
+            <!-- Main Content -->
+            <main class="flex flex-col">
             <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div>
@@ -33,7 +35,8 @@
                     </div>
                 </div>
             </div>
-        </main>
+            </main>
+        </div>
     </div>
 </body>
 </html>

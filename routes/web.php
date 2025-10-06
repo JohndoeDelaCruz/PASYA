@@ -46,6 +46,22 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     // Crop production management routes
     Route::resource('crops', App\Http\Controllers\CropController::class);
     
+    // Crop Management Routes (CRUD for crop types and municipalities)
+    Route::get('/crop-management', [App\Http\Controllers\CropManagementController::class, 'index'])->name('crop-management.index');
+    
+    // Combined Route (add both crop type and municipality)
+    Route::post('/crop-management/combined', [App\Http\Controllers\CropManagementController::class, 'storeCombined'])->name('crop-management.combined.store');
+    
+    // Crop Type CRUD Routes
+    Route::post('/crop-management/crop-types', [App\Http\Controllers\CropManagementController::class, 'storeCropType'])->name('crop-management.crop-types.store');
+    Route::put('/crop-management/crop-types/{name}', [App\Http\Controllers\CropManagementController::class, 'updateCropType'])->name('crop-management.crop-types.update');
+    Route::delete('/crop-management/crop-types/{name}', [App\Http\Controllers\CropManagementController::class, 'deleteCropType'])->name('crop-management.crop-types.delete');
+    
+    // Municipality CRUD Routes
+    Route::post('/crop-management/municipalities', [App\Http\Controllers\CropManagementController::class, 'storeMunicipality'])->name('crop-management.municipalities.store');
+    Route::put('/crop-management/municipalities/{name}', [App\Http\Controllers\CropManagementController::class, 'updateMunicipality'])->name('crop-management.municipalities.update');
+    Route::delete('/crop-management/municipalities/{name}', [App\Http\Controllers\CropManagementController::class, 'deleteMunicipality'])->name('crop-management.municipalities.delete');
+    
     // Crop import/export routes
     Route::get('/crops/import-export', [App\Http\Controllers\CropController::class, 'importExport'])->name('crops.import-export');
     Route::post('/crops/import', [App\Http\Controllers\CropController::class, 'import'])->name('crops.import');

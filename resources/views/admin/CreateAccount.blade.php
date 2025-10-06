@@ -48,13 +48,15 @@
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <div class="flex h-screen">
+<body class="bg-gray-50 min-h-screen">
+    <div class="flex">
         <!-- Include Sidebar -->
         @include('admin.partials.sidebar', ['active' => 'create-account'])
-
-        <!-- Main Content -->
-        <main class="flex-1 overflow-y-auto">
+        
+        <!-- Main Content Container -->
+        <div class="flex-1 ml-64 min-h-screen">
+            <!-- Main Content -->
+            <main class="flex flex-col">
             <!-- Header -->
             <header class="bg-white shadow-sm border-b border-gray-200">
                 <div class="px-6 py-4">
@@ -120,8 +122,9 @@
                 </div>
             </div>
 
-            <!-- Data Table -->
-            <div class="p-6">
+            <!-- Main Content Area -->
+            <div class="flex-1 p-6 overflow-y-auto">
+                <!-- Data Table -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                     <!-- Table Actions -->
                     <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
@@ -311,7 +314,8 @@
                     </div>
                 </div>
             </div>
-        </main>
+            </main>
+        </div>
     </div>
 
     <!-- Add Farmer Modal -->

@@ -142,12 +142,14 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 h-screen overflow-hidden">
-    <div class="flex h-full">
+<body class="bg-gray-50 min-h-screen">
+    <div class="flex">
         @include('admin.partials.sidebar', ['active' => 'crops'])
-
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col overflow-hidden">
+        
+        <!-- Main Content Container -->
+        <div class="flex-1 ml-64 min-h-screen">
+            <!-- Main Content -->
+            <main class="flex flex-col">
             <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div>
@@ -171,7 +173,7 @@
                 </div>
             </header>
 
-            <div class="flex-1 overflow-y-auto p-6">
+            <div class="flex-1 p-6 overflow-y-auto max-h-screen">
                 <!-- Success Message -->
                 @if(session('success'))
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
@@ -183,12 +185,12 @@
                 <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
                     <div class="flex flex-col lg:flex-row gap-4">
                         <form method="GET" action="{{ route('admin.crops.index') }}" class="flex flex-wrap items-center gap-3 flex-1" id="searchForm">
-                            <div class="flex-1 min-w-64 relative">
+                            <div class="min-w-48 max-w-64 relative">
                                 <input type="text" 
                                        name="search" 
                                        id="searchInput" 
                                        value="{{ request('search') }}" 
-                                       placeholder="Search crops, municipalities, farmers, yields, dates..." 
+                                       placeholder="Search crops, farmers, locations..." 
                                        class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                                        autocomplete="off">
                                 <div class="absolute right-2 top-1/2 transform -translate-y-1/2">
@@ -258,6 +260,29 @@
                                             <div>• Crop varieties</div>
                                             <div>• Categories</div>
                                             <div>• Descriptions</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="min-w-24 relative">
+                                <select name="year" 
+                                        id="yearFilter"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                        onchange="this.form.submit()">
+                                    <option value="">Year</option>
+                                    @if(isset($allYears) && $allYears->count() > 0)
+                                        @foreach($allYears as $year)
+                                            <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                                <div id="yearHints" class="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg z-10 hidden mt-1">
+                                    <div class="p-2 text-xs text-gray-600">
+                                        <div class="font-medium mb-1">Filter by:</div>
+                                        <div class="text-gray-500 space-y-1">
+                                            <div>• Production year</div>
+                                            <div>• Planting year</div>
+                                            <div>• Harvest year</div>
                                         </div>
                                     </div>
                                 </div>
@@ -363,30 +388,10 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
                                             </svg>
                                         </th>
-                                        <th class="px-4 py-4 text-left text-sm font-medium text-gray-600 cursor-pointer hover:text-gray-800">
-                                            Category
-                                            <svg class="w-3 h-3 inline ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
-                                            </svg>
-                                        </th>
-                                        <th class="px-4 py-4 text-left text-sm font-medium text-gray-600 cursor-pointer hover:text-gray-800">
-                                            Days to Maturity
-                                            <svg class="w-3 h-3 inline ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
-                                            </svg>
-                                        </th>
-                                        <th class="px-4 py-4 text-left text-sm font-medium text-gray-600 cursor-pointer hover:text-gray-800">
-                                            Production Month
-                                            <svg class="w-3 h-3 inline ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
-                                            </svg>
-                                        </th>
-                                        <th class="px-4 py-4 text-left text-sm font-medium text-gray-600 cursor-pointer hover:text-gray-800">
-                                            Production Farm Type
-                                            <svg class="w-3 h-3 inline ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
-                                            </svg>
-                                        </th>
+
+
+
+
                                         <th class="px-4 py-4 text-right text-sm font-medium text-gray-600 w-16">
                                         </th>
                                     </tr>
@@ -416,18 +421,10 @@
                                             <td class="px-4 py-4 text-sm text-gray-700">
                                                 {{ $crop->productivity_mt_ha ? number_format($crop->productivity_mt_ha, 4) : 'N/A' }}
                                             </td>
-                                            <td class="px-4 py-4 text-sm text-gray-700">
-                                                {{ $crop->cropCategory ?? 'N/A' }}
-                                            </td>
-                                            <td class="px-4 py-4 text-sm text-gray-700">
-                                                {{ $crop->cropDaysToMaturity ? $crop->cropDaysToMaturity . ' days' : 'N/A' }}
-                                            </td>
-                                            <td class="px-4 py-4 text-sm text-gray-700">
-                                                {{ $crop->productionMonth ?? 'N/A' }}
-                                            </td>
-                                            <td class="px-4 py-4 text-sm text-gray-700">
-                                                {{ $crop->productionFarmType ?? 'N/A' }}
-                                            </td>
+
+
+
+
                                             <td class="px-4 py-4 text-right">
                                                 <div class="relative inline-block">
                                                     <button onclick="toggleDropdown({{ $crop->id }})" class="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" title="More actions">
@@ -453,7 +450,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="11" class="px-6 py-12 text-center text-gray-500">
+                                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
                                                 @if(request()->hasAny(['search', 'municipality', 'crop']))
                                                     <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -574,7 +571,8 @@
                     </div>
                 @endif
             </div>
-        </main>
+            </main>
+        </div>
     </div>
 
     <!-- Add Crop Modal -->
@@ -2815,6 +2813,8 @@
         const municipalityHints = document.getElementById('municipalityHints');
         const cropFilter = document.getElementById('cropFilter');
         const cropHints = document.getElementById('cropHints');
+        const yearFilter = document.getElementById('yearFilter');
+        const yearHints = document.getElementById('yearHints');
 
         // Show/hide search hints on focus/blur
         if (searchInput && searchHints) {
@@ -2896,6 +2896,29 @@
             });
         }
 
+        // Year filter hints functionality
+        if (yearFilter && yearHints) {
+            yearFilter.addEventListener('mouseenter', function() {
+                yearHints.classList.remove('hidden');
+            });
+
+            yearFilter.addEventListener('mouseleave', function() {
+                setTimeout(() => {
+                    yearHints.classList.add('hidden');
+                }, 300);
+            });
+
+            yearFilter.addEventListener('focus', function() {
+                yearHints.classList.remove('hidden');
+            });
+
+            yearFilter.addEventListener('blur', function() {
+                setTimeout(() => {
+                    yearHints.classList.add('hidden');
+                }, 150);
+            });
+        }
+
         // Handle form submission with visual feedback
         if (searchForm) {
             searchForm.addEventListener('submit', function() {
@@ -2932,6 +2955,11 @@
             // Check for active crop filter  
             if (cropFilter && cropFilter.value !== '') {
                 activeFilters.push(`Crop: ${cropFilter.value}`);
+            }
+            
+            // Check for active year filter
+            if (yearFilter && yearFilter.value !== '') {
+                activeFilters.push(`Year: ${yearFilter.value}`);
             }
             
             // Check for sort
