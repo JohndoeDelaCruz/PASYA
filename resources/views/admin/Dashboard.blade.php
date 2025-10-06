@@ -7,19 +7,20 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 h-screen overflow-hidden">
-    <div class="flex h-full">
-        @include('admin.partials.sidebar', ['active' => 'dashboard'])
+            <div class="flex h-screen bg-gray-100">
+            @include('admin.partials.sidebar')
 
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col overflow-hidden">
-            <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-                <div class="flex items-center justify-between">
+            <!-- Main Content Area -->
+            <div class="flex-1 flex flex-col ml-64">
+                @include('admin.partials.header')
+                
+                <!-- Page Title -->
+                <div class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-                        <p class="text-sm text-gray-600">Welcome to the PASYA admin panel</p>
+                        <p class="text-sm text-gray-600">Welcome back! Here's what's happening with your agricultural system.</p>
                     </div>
                 </div>
-            </header>
 
             <div class="flex-1 overflow-y-auto p-6">
                 <!-- Empty content area - pages will be implemented as needed -->

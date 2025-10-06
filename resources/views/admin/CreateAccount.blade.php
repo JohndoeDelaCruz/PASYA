@@ -55,29 +55,30 @@
         
         <!-- Main Content Container -->
         <div class="flex-1 ml-64 min-h-screen">
+            @include('admin.partials.header')
+            
             <!-- Main Content -->
             <main class="flex flex-col">
-            <!-- Header -->
-            <header class="bg-white shadow-sm border-b border-gray-200">
-                <div class="px-6 py-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h1 class="text-2xl font-bold text-gray-900">Farmer Account Management</h1>
-                            <p class="text-sm text-gray-600 mt-1">Manage and view farmer accounts in the system</p>
-                        </div>
-                        <div class="flex items-center space-x-3">
-                            <button onclick="openAddFarmerModal()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                                <span>Add Farmer Account</span>
-                            </button>
-                            <button onclick="openBatchImportModal()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                                </svg>
-                                <span>Batch Import</span>
-                            </button>
+            <!-- Page Title -->
+            <div class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Farmer Account Management</h1>
+                        <p class="text-sm text-gray-600 mt-1">Manage and view farmer accounts in the system</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="openAddFarmerModal()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            <span>Add Farmer Account</span>
+                        </button>
+                        <button onclick="openBatchImportModal()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            <span>Batch Import</span>
+                        </button>
                         </div>
                     </div>
                 </div>

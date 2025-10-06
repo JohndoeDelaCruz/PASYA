@@ -148,9 +148,12 @@
         
         <!-- Main Content Container -->
         <div class="flex-1 ml-64 min-h-screen">
+            @include('admin.partials.header')
+            
             <!-- Main Content -->
             <main class="flex flex-col">
-            <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+            <!-- Page Title -->
+            <div class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
                 <div class="flex items-center justify-between">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">Crop Production Management</h1>
@@ -171,7 +174,7 @@
                         </button>
                     </div>
                 </div>
-            </header>
+            </div>
 
             <div class="flex-1 p-6 overflow-y-auto max-h-screen">
                 <!-- Success Message -->

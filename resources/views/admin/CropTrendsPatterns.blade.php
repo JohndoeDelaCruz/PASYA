@@ -11,17 +11,21 @@
         @include('admin.partials.sidebar', ['active' => 'crop-trends'])
         
         <!-- Main Content Container -->
-        <div class="flex-1 ml-64 min-h-screen">
-            <!-- Main Content -->
-            <main class="flex flex-col">
-            <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-                <div class="flex items-center justify-between">
+                <div class="flex h-screen bg-gray-100">
+            <!-- Sidebar -->
+            @include('admin.partials.sidebar')
+
+            <!-- Main Content Area -->
+            <div class="flex-1 flex flex-col ml-64">
+                @include('admin.partials.header')
+                
+                <!-- Page Title -->
+                <div class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">Crop Trends & Patterns</h1>
-                        <p class="text-sm text-gray-600">Crop analysis dashboard - coming soon</p>
+                        <p class="text-sm text-gray-600">Analyze agricultural trends and seasonal patterns</p>
                     </div>
                 </div>
-            </header>
 
             <div class="flex-1 overflow-y-auto p-6">
                 <!-- Empty content area -->
