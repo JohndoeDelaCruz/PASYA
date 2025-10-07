@@ -31,40 +31,40 @@
         @include('admin.partials.sidebar', ['active' => 'data-analytics'])
         
         <!-- Main Content Container -->
-        <div class="flex-1 ml-64 min-h-screen">
+        <div class="flex-1 lg:ml-64 min-h-screen">
             @include('admin.partials.header')
 
             <!-- Main Content -->
             <main class="flex flex-col">
             <!-- Page Title Header -->
-            <div class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-                <div class="flex items-center justify-between">
+            <div class="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">Dashboard</h1>
+                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
                         <p class="text-sm text-gray-600">Comprehensive agricultural data analytics and insights</p>
                     </div>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-6">
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6">
                 <!-- Action Buttons and Filters Section -->
-                <div class="mb-6 flex items-center justify-between">
+                <div class="mb-6 flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
                     <!-- Left side - Action Buttons -->
-                    <div class="flex items-center space-x-3">
-                        <button class="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 font-medium">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                        <button class="w-full sm:w-auto px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 font-medium text-sm sm:text-base">
                             Allocate Resource
                         </button>
-                        <button class="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 font-medium">
+                        <button class="w-full sm:w-auto px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 font-medium text-sm sm:text-base">
                             Recommend
                         </button>
                     </div>
 
                     <!-- Right side - Filters -->
-                    <div class="flex items-center space-x-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                         <span class="text-sm font-medium text-gray-700">Filter by:</span>
                         
                         <!-- Crop Dropdown -->
-                        <select name="crop" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500 bg-white">
+                        <select name="crop" class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500 bg-white">
                             <option value="">Crop</option>
                             <option value="broccoli">Broccoli</option>
                             <option value="cabbage">Cabbage</option>
@@ -80,7 +80,7 @@
                         </select>
 
                         <!-- Municipality Dropdown -->
-                        <select name="municipality" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500 bg-white">
+                        <select name="municipality" class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500 bg-white">
                             <option value="">Municipality</option>
                             <option value="atok">Atok</option>
                             <option value="bakun">Bakun</option>
@@ -98,7 +98,7 @@
                         </select>
 
                         <!-- Month Dropdown -->
-                        <select name="month" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500 bg-white">
+                        <select name="month" class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500 bg-white">
                             <option value="">Month</option>
                             <option value="january">January</option>
                             <option value="february">February</option>
@@ -115,7 +115,7 @@
                         </select>
 
                         <!-- Year Dropdown -->
-                        <select name="year" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500 bg-white">
+                        <select name="year" class="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500 bg-white">
                             <option value="">Year</option>
                             <option value="2015">2015</option>
                             <option value="2016">2016</option>
@@ -131,20 +131,21 @@
                         </select>
 
                         <!-- Reset Button -->
-                        <button onclick="resetFilters()" class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 font-medium">
+                                                <!-- Reset Button -->
+                        <button onclick="resetFilters()" class="w-full sm:w-auto px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 font-medium text-sm sm:text-base">
                             Reset
                         </button>
                     </div>
                 </div>
 
                 <!-- Production Chart -->
-                <div class="mb-6 bg-white rounded-lg shadow-sm p-6">
-                    <div class="flex items-center justify-between mb-4">
+                <div class="mb-6 bg-white rounded-lg shadow-sm p-4 sm:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
                         <div>
-                            <h3 class="text-lg font-semibold text-gray-900">Total Analysis Line Chart</h3>
-                            <p class="text-sm text-gray-600">Production analysis by crop type</p>
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900">Total Analysis Line Chart</h3>
+                            <p class="text-xs sm:text-sm text-gray-600">Production analysis by crop type</p>
                         </div>
-                        <div class="flex items-center space-x-2 text-sm">
+                        <div class="flex items-center space-x-2 text-xs sm:text-sm">
                             <span class="text-gray-600">Production up by 5.2% this month</span>
                             <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
@@ -158,51 +159,51 @@
 
                 <!-- Key Metrics -->
                 <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Key Metrics:</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Key Metrics:</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                         <!-- Number of Farmers -->
-                        <div class="metric-card bg-white rounded-lg shadow-sm p-6">
+                        <div class="metric-card bg-white rounded-lg shadow-sm p-4 sm:p-6">
                             <div class="flex items-center">
-                                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                                     </svg>
                                 </div>
-                                <div class="ml-4 flex-1">
-                                    <h4 class="text-sm font-medium text-gray-600">Number of Farmers</h4>
-                                    <p class="text-2xl font-bold text-gray-900">156</p>
+                                <div class="ml-3 sm:ml-4 flex-1 min-w-0">
+                                    <h4 class="text-xs sm:text-sm font-medium text-gray-600">Number of Farmers</h4>
+                                    <p class="text-lg sm:text-2xl font-bold text-gray-900">156</p>
                                     <p class="text-xs text-gray-500">Updated July 2025</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Total Area -->
-                        <div class="metric-card bg-white rounded-lg shadow-sm p-6">
+                        <div class="metric-card bg-white rounded-lg shadow-sm p-4 sm:p-6">
                             <div class="flex items-center">
-                                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"></path>
                                     </svg>
                                 </div>
-                                <div class="ml-4 flex-1">
-                                    <h4 class="text-sm font-medium text-gray-600">Total Area planted/harvested</h4>
-                                    <p class="text-2xl font-bold text-gray-900">1000 ha</p>
+                                <div class="ml-3 sm:ml-4 flex-1 min-w-0">
+                                    <h4 class="text-xs sm:text-sm font-medium text-gray-600">Total Area planted/harvested</h4>
+                                    <p class="text-lg sm:text-2xl font-bold text-gray-900">1000 ha</p>
                                     <p class="text-xs text-gray-500">Updated July 2025</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Average Yield -->
-                        <div class="metric-card bg-white rounded-lg shadow-sm p-6">
+                        <div class="metric-card bg-white rounded-lg shadow-sm p-4 sm:p-6">
                             <div class="flex items-center">
-                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                                     </svg>
                                 </div>
-                                <div class="ml-4 flex-1">
-                                    <h4 class="text-sm font-medium text-gray-600">Average Yield</h4>
-                                    <p class="text-2xl font-bold text-gray-900">56</p>
+                                <div class="ml-3 sm:ml-4 flex-1 min-w-0">
+                                    <h4 class="text-xs sm:text-sm font-medium text-gray-600">Average Yield</h4>
+                                    <p class="text-lg sm:text-2xl font-bold text-gray-900">56</p>
                                     <p class="text-xs text-gray-500">Updated July 2025</p>
                                 </div>
                             </div>
@@ -210,19 +211,19 @@
                     </div>
 
                     <!-- Export Summary Data Button -->
-                    <div class="mt-4 flex justify-end">
-                        <button class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200">
+                    <div class="mt-4 flex justify-stretch sm:justify-end">
+                        <button class="w-full sm:w-auto px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 text-sm sm:text-base">
                             Export Summary Data
                         </button>
                     </div>
                 </div>
 
                 <!-- Summary Cards -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     <!-- Top 3 Crops -->
-                    <div class="bg-white rounded-lg shadow-sm p-6">
+                    <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-lg font-semibold text-gray-900">Summary Cards</h3>
+                            <h3 class="text-base sm:text-lg font-semibold text-gray-900">Summary Cards</h3>
                             <div class="w-3 h-3 bg-green-500 rounded-full"></div>
                         </div>
                         
@@ -260,7 +261,7 @@
                     </div>
 
                     <!-- Demand Chart -->
-                    <div class="bg-white rounded-lg shadow-sm p-6">
+                    <div class="bg-white rounded-lg shadow-sm p-4 sm:p-6">
                         <div class="flex items-center justify-between mb-4">
                             <div>
                                 <h3 class="font-medium text-gray-800">Demand</h3>

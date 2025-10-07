@@ -1,26 +1,33 @@
 <!-- Top Header with PASYA Logo -->
-<header class="bg-white shadow-sm border-b border-gray-200 px-6 py-3">
+<header class="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-3">
     <div class="flex items-center justify-between">
-        <!-- Left side - PASYA Logo -->
+        <!-- Left side - Mobile Menu Button + PASYA Logo -->
         <div class="flex items-center space-x-3">
+            <!-- Mobile Menu Button (hidden on lg screens) -->
+            <button onclick="toggleSidebar()" class="lg:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                </svg>
+            </button>
+            
             <div class="flex items-center">
-                <img src="{{ asset('images/PASYA.png') }}" alt="PASYA Logo" class="w-10 h-10 mr-3">
-                <img src="{{ asset('images/title.png') }}" alt="PASYA Title" class="h-14 w-auto">
+                <img src="{{ asset('images/PASYA.png') }}" alt="PASYA Logo" class="w-8 h-8 sm:w-10 sm:h-10 mr-2 sm:mr-3">
+                <img src="{{ asset('images/title.png') }}" alt="PASYA Title" class="h-10 sm:h-14 w-auto">
             </div>
         </div>
         
         <!-- Right side - Navigation Icons -->
-        <div class="flex items-center space-x-4">
-            <!-- Notification Bell -->
-            <button class="p-2 text-gray-500 hover:text-gray-700 transition-colors duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-center space-x-2 sm:space-x-4">
+            <!-- Notification Bell (hidden on mobile) -->
+            <button class="hidden sm:block p-2 text-gray-500 hover:text-gray-700 transition-colors duration-200">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                 </svg>
             </button>
             
-            <!-- Clock/Time -->
-            <button class="p-2 text-gray-500 hover:text-gray-700 transition-colors duration-200">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <!-- Clock/Time (hidden on mobile) -->
+            <button class="hidden sm:block p-2 text-gray-500 hover:text-gray-700 transition-colors duration-200">
+                <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
             </button>
@@ -28,8 +35,8 @@
             <!-- Admin Menu Dropdown -->
             <div class="relative">
                 <button onclick="toggleAccountDropdown()" class="p-2 text-gray-500 hover:text-gray-700 transition-colors duration-200">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
                     </svg>
                 </button>
                 
@@ -86,6 +93,11 @@
         dropdown.classList.toggle('hidden');
     }
 
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('-translate-x-full');
+    }
+
     // Close dropdown when clicking outside
     document.addEventListener('click', function(event) {
         const dropdown = document.getElementById('accountDropdown');
@@ -93,6 +105,16 @@
         
         if (!button && dropdown && !dropdown.contains(event.target)) {
             dropdown.classList.add('hidden');
+        }
+    });
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', function(event) {
+        const sidebar = document.getElementById('sidebar');
+        const toggleButton = event.target.closest('button[onclick="toggleSidebar()"]');
+        
+        if (window.innerWidth < 1024 && !sidebar.contains(event.target) && !toggleButton && !sidebar.classList.contains('-translate-x-full')) {
+            sidebar.classList.add('-translate-x-full');
         }
     });
 </script>

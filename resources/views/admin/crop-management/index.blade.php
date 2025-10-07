@@ -52,17 +52,17 @@
         @include('admin.partials.sidebar', ['active' => 'crop-management'])
         
         <!-- Main Content Container -->
-        <div class="flex-1 ml-64 min-h-screen">
+        <div class="flex-1 lg:ml-64 min-h-screen">
             @include('admin.partials.header')
             
             <!-- Page Title -->
-            <div class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-                <div class="flex items-center justify-between">
+            <div class="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">Crop Production Management</h1>
-                        <p class="text-gray-600 mt-1">Manage crop types and municipalities for scalability</p>
+                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Crop Production Management</h1>
+                        <p class="text-sm text-gray-600 mt-1">Manage crop types and municipalities for scalability</p>
                     </div>
-                    <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 sm:space-x-3">
                         <button onclick="refreshData()" class="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors duration-200">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -76,9 +76,9 @@
             </div>
 
         <!-- Main Content -->
-        <div class="p-6">
+        <div class="p-4 sm:p-6">
             <!-- Statistics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
                 <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-green-500">
                     <div class="flex items-center">
                         <div class="flex-1">
@@ -152,6 +152,36 @@
                                 </svg>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Section -->
+            <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">Filter Options</h3>
+                    <button onclick="resetFilters()" class="px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition-colors duration-200 text-sm">
+                        Reset Filters
+                    </button>
+                </div>
+                <div class="flex items-center space-x-4 mt-4">
+                    <div class="flex items-center space-x-2">
+                        <label for="crop_filter" class="text-sm font-medium text-gray-700">Crop:</label>
+                        <select id="crop_filter" onchange="applyFilters()" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Crops</option>
+                            @foreach($cropTypes as $cropType)
+                                <option value="{{ $cropType }}">{{ $cropType }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <label for="municipality_filter" class="text-sm font-medium text-gray-700">Municipality:</label>
+                        <select id="municipality_filter" onchange="applyFilters()" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Municipalities</option>
+                            @foreach($municipalities as $municipality)
+                                <option value="{{ $municipality }}">{{ $municipality }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
             </div>
@@ -312,6 +342,39 @@
         // Refresh data
         function refreshData() {
             location.reload();
+        }
+
+        // Filter functionality
+        function applyFilters() {
+            const cropFilter = document.getElementById('crop_filter').value.toLowerCase();
+            const municipalityFilter = document.getElementById('municipality_filter').value.toLowerCase();
+            
+            // Filter crop type cards
+            const cropCards = document.querySelectorAll('#crop-types-content .management-card');
+            cropCards.forEach(card => {
+                const cropName = card.querySelector('h4').textContent.toLowerCase();
+                const shouldShow = cropFilter === '' || cropName.includes(cropFilter);
+                card.style.display = shouldShow ? 'block' : 'none';
+            });
+            
+            // Filter municipality cards
+            const municipalityCards = document.querySelectorAll('#municipalities-content .management-card');
+            municipalityCards.forEach(card => {
+                const municipalityName = card.querySelector('h4').textContent.toLowerCase();
+                const shouldShow = municipalityFilter === '' || municipalityName.includes(municipalityFilter);
+                card.style.display = shouldShow ? 'block' : 'none';
+            });
+        }
+
+        // Reset filters
+        function resetFilters() {
+            document.getElementById('crop_filter').value = '';
+            document.getElementById('municipality_filter').value = '';
+            
+            // Show all cards
+            document.querySelectorAll('.management-card').forEach(card => {
+                card.style.display = 'block';
+            });
         }
 
         // Show success/error messages

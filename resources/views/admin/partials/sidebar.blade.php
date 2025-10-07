@@ -1,5 +1,5 @@
 <!-- Sidebar -->
-<aside class="fixed left-0 top-0 w-64 h-full bg-white flex flex-col shadow-lg z-40" style="background-color: #28310D;">
+<aside id="sidebar" class="fixed left-0 top-0 w-64 h-full bg-white flex flex-col shadow-lg z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out" style="background-color: #28310D;">
     <div class="p-6 border-b" style="border-color: rgba(255, 255, 255, 0.2);">
         <div class="flex items-center space-x-3">
             <img src="{{ asset('images/PASYA.png') }}" alt="PASYA Logo" class="w-10 h-10 object-contain">

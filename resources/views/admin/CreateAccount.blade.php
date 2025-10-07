@@ -54,26 +54,26 @@
         @include('admin.partials.sidebar', ['active' => 'create-account'])
         
         <!-- Main Content Container -->
-        <div class="flex-1 ml-64 min-h-screen">
+        <div class="flex-1 lg:ml-64 min-h-screen">
             @include('admin.partials.header')
             
             <!-- Main Content -->
             <main class="flex flex-col">
             <!-- Page Title -->
-            <div class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-                <div class="flex items-center justify-between">
+            <div class="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-4">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900">Farmer Account Management</h1>
+                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Farmer Account Management</h1>
                         <p class="text-sm text-gray-600 mt-1">Manage and view farmer accounts in the system</p>
                     </div>
-                    <div class="flex items-center space-x-3">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
                         <button onclick="openAddFarmerModal()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
                             <span>Add Farmer Account</span>
                         </button>
-                        <button onclick="openBatchImportModal()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2">
+                        <button onclick="openBatchImportModal()" class="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                             </svg>
@@ -86,8 +86,8 @@
 
             <!-- Filters Section -->
             <div class="bg-white shadow-sm border-b border-gray-200">
-                <div class="px-6 py-4">
-                    <form id="filterForm" class="flex items-center space-x-4">
+                <div class="px-4 sm:px-6 py-4">
+                    <form id="filterForm" class="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
                         <div class="flex-1">
                             <input type="text" id="searchInput" name="search" placeholder="Search by name..." 
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"

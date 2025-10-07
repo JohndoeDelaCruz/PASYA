@@ -147,22 +147,23 @@ class CropManagementController extends Controller
     /**
      * Update a crop type
      */
-    public function updateCropType(Request $request)
+    public function updateCropType(Request $request, $name)
     {
         $request->validate([
-            'old_crop_name' => 'required|string|max:255',
-            'new_crop_name' => 'required|string|max:255',
-            'description' => 'nullable|string|max:500'
+            'crop_type_name' => 'required|string|max:255'
         ]);
 
         try {
+            // Decode the URL-encoded name parameter
+            $oldCropName = urldecode($name);
+            $newCropName = $request->crop_type_name;
+            
             // Update all records with the old crop name
             $updated = DB::table('crops')
-                ->where('crop_name', $request->old_crop_name)
+                ->where('crop_name', $oldCropName)
                 ->update([
-                    'crop_name' => $request->new_crop_name,
-                    'name' => $request->new_crop_name,
-                    'description' => $request->description,
+                    'crop_name' => $newCropName,
+                    'name' => $newCropName,
                     'updated_at' => now()
                 ]);
 
