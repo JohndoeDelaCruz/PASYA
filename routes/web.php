@@ -6,7 +6,7 @@ use App\Http\Controllers\FarmerController;
 use App\Http\Controllers\AdminController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('landing');
 });
 
 // Authentication Routes
@@ -65,6 +65,7 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
     // Crop import/export routes
     Route::get('/crops/import-export', [App\Http\Controllers\CropController::class, 'importExport'])->name('crops.import-export');
     Route::post('/crops/import', [App\Http\Controllers\CropController::class, 'import'])->name('crops.import');
+    Route::get('/crops/import-progress', [App\Http\Controllers\CropController::class, 'importProgress'])->name('crops.import-progress');
     Route::get('/crops/export', [App\Http\Controllers\CropController::class, 'export'])->name('crops.export');
     Route::get('/crops/template', [App\Http\Controllers\CropController::class, 'downloadTemplate'])->name('crops.template');
     Route::get('/crops/{crop}/export', [App\Http\Controllers\CropController::class, 'exportSingle'])->name('crops.export-single');

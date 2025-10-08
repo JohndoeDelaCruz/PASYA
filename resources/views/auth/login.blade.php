@@ -103,11 +103,11 @@
             </div>
             
             <!-- Right Side - Logo and Caption -->
-            <div class="w-1/2 bg-green-100 p-12 flex flex-col items-center justify-center">
+            <div class="w-1/2 bg-white p-12 flex flex-col items-center justify-center">
                 <div class="text-center">
                     <!-- Logo -->
                     <div class="flex justify-center mb-8">
-                        <img src="{{ asset('images/PASYA.png') }}" alt="Benguet Agriculture Platform Logo" class="w-48 h-48 object-contain">
+                        <img src="{{ asset('images/PASYA.png') }}" alt="Benguet Agriculture Platform Logo" class="w-32 h-32 object-contain">
                     </div>
                     
                     <!-- Caption -->

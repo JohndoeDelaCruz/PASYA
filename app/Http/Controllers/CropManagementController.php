@@ -37,6 +37,18 @@ class CropManagementController extends Controller
         $totalCropTypes = $cropTypes->count();
         $totalMunicipalities = $municipalities->count();
         $totalCrops = DB::table('crops')->count();
+        
+        // Calculate production and area statistics
+        $totalProduction = DB::table('crops')
+            ->whereNotNull('production_mt')
+            ->where('production_mt', '>', 0)
+            ->sum('production_mt');
+            
+        $totalAreaHarvested = DB::table('crops')
+            ->whereNotNull('area_harvested')
+            ->where('area_harvested', '>', 0)
+            ->sum('area_harvested');
+            
         $recentlyAdded = \App\Models\Crop::select('crop_name', 'municipality', 'created_at')
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -48,6 +60,8 @@ class CropManagementController extends Controller
             'totalCropTypes', 
             'totalMunicipalities', 
             'totalCrops', 
+            'totalProduction',
+            'totalAreaHarvested',
             'recentlyAdded'
         ));
     }

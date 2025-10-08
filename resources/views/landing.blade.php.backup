@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PASYA - Predictive Analytics for Sustainable Agriculture and Yield Advancement</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .hero-bg {
+            background-image: url('/images/rice-terraces.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+        }
+        
+        /* Smooth transitions */
+        * {
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        
+        /* Mobile menu animation */
+        #navbar-sticky {
+            transition: max-height 0.3s ease-in-out;
+        }
+        
+        /* Card hover effects */
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        /* Ensure images are responsive */
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <!-- Navigation Header -->
+    <nav class="bg-white dark:bg-gray-900 fixed w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600 shadow-md">
+        <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-3 sm:p-4">
+            <a href="{{ url('/') }}" class="flex items-center space-x-1 sm:space-x-2">
+                <img src="{{ asset('images/PASYA.png') }}" class="h-6 sm:h-8 md:h-10" alt="PASYA Logo"/>
+                <img src="{{ asset('images/title.png') }}" class="h-6 sm:h-8 md:h-10" alt="PASYA Title"/>
+            </a>
+            
+            <div class="flex md:order-2 space-x-2 sm:space-x-3 md:space-x-0">
+                @guest
+                    <a href="{{ route('login') }}" class="text-white bg-green-500 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs sm:text-sm px-3 sm:px-4 py-2 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 transition-all duration-200">
+                        Get started
+                    </a>
+                @else
+                    <a href="{{ route('admin.data-analytics') }}" class="text-white bg-green-500 hover:bg-green-600 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-xs sm:text-sm px-3 sm:px-4 py-2 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 transition-all duration-200">
+                        Dashboard
+                    </a>
+                @endguest
+                
+                <button data-collapse-toggle="navbar-sticky" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-sticky" aria-expanded="false">
+                    <span class="sr-only">Open main menu</span>
+                    <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="items-center justify-between hidden w-full md:flex md:w-auto md:order-1" id="navbar-sticky">
+                <ul class="flex flex-col p-4 md:p-0 mt-4 font-medium border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
+                    <li>
+                        <a href="#home" class="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500 hover:bg-blue-800 md:hover:bg-transparent transition-colors" aria-current="page">Home</a>
+                    </li>
+                    <li>
+                        <a href="#about" class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 transition-colors">About us</a>
+                    </li>
+                    <li>
+                        <a href="#features" class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 transition-colors">Features</a>
+                    </li>
+                    <li>
+                        <a href="#contact" class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0 md:dark:hover:text-blue-500 dark:text-white dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 transition-colors">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="bg-white min-h-screen flex items-center">
+        <div class="px-4 sm:px-6 mx-auto max-w-screen-xl text-center py-20 sm:py-32 w-full">
+            <img class="h-auto w-16 sm:w-20 md:w-24 lg:w-28 mx-auto mb-6 sm:mb-8" src="{{ asset('images/PASYA.png') }}" alt="PASYA Logo"/>
+            <h1 class="mb-4 text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-extrabold tracking-tight leading-tight text-green-700 px-2">
+                PASYA: Predictive Analytics for Sustainable Agriculture and Yield Advancement
+            </h1>
+            <p class="mb-8 text-sm sm:text-base md:text-lg lg:text-xl font-normal text-gray-700 px-4 sm:px-8 lg:px-16">
+                A Decision Support System for Highland Vegetable Agriculture in Benguet
+            </p>
+            <div class="flex flex-col space-y-3 sm:flex-row sm:justify-center sm:space-y-0 sm:space-x-4 px-4">
+                <a href="{{ route('login') }}" class="inline-flex justify-center items-center py-3 px-6 text-sm sm:text-base font-medium text-center text-white rounded-lg bg-green-500 hover:bg-green-600 focus:ring-4 focus:ring-green-300 transform hover:scale-105 transition-all duration-200 shadow-lg">
+                    Get started
+                    <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                    </svg>
+                </a>
+                <a href="#features" class="inline-flex justify-center items-center py-3 px-6 text-sm sm:text-base font-medium text-center text-green-700 rounded-lg border-2 border-green-600 hover:bg-green-600 hover:text-white focus:ring-4 focus:ring-green-300 transition-all duration-200 shadow-lg">
+                    Learn how it works
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="bg-white dark:bg-gray-900">
+        <div class="py-8 sm:py-12 lg:py-16 px-4 sm:px-6 mx-auto max-w-screen-xl">
+            <div class="bg-gradient-to-r from-green-50 to-blue-50 dark:from-gray-800 dark:to-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 sm:p-8 md:p-12 mb-8 sm:mb-12">
+                <h1 class="text-gray-900 dark:text-white text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-4 leading-tight">
+                    Where Tradition Meets Technology: Data-Driven Farming for Benguet's Future
+                </h1>
+            </div>
+            
+            <!-- Features Grid -->
+            <div id="features" class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 mb-8 sm:mb-12">
+                <div class="feature-card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 sm:p-8 md:p-12">
+                    <div class="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-green-100 dark:bg-green-900 mb-4">
+                        <svg class="w-6 h-6 sm:w-7 sm:h-7 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-gray-900 dark:text-white text-2xl sm:text-3xl font-extrabold mb-3">Crop Prediction Dashboard</h2>
+                    <p class="text-base sm:text-lg font-normal text-gray-500 dark:text-gray-400 mb-4">
+                        Visual forecasts of crop yields based on historical and seasonal data
+                    </p>
+                    <a href="{{ route('login') }}" class="text-blue-600 dark:text-blue-500 hover:underline font-medium text-base sm:text-lg inline-flex items-center group">
+                        Read more
+                        <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180 group-hover:translate-x-1 transition-transform" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                        </svg>
+                    </a>
+                </div>
+                
+                <div class="feature-card bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 sm:p-8 md:p-12">
+                    <div class="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-100 dark:bg-blue-900 mb-4">
+                        <svg class="w-6 h-6 sm:w-7 sm:h-7 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                        </svg>
+                    </div>
+                    <h2 class="text-gray-900 dark:text-white text-2xl sm:text-3xl font-extrabold mb-3">Seasonal Trend Analysis</h2>
+                    <p class="text-base sm:text-lg font-normal text-gray-500 dark:text-gray-400 mb-4">
+                        Insights on optimal planting and harvesting periods
+                    </p>
+                    <a href="{{ route('login') }}" class="text-blue-600 dark:text-blue-500 hover:underline font-medium text-base sm:text-lg inline-flex items-center group">
+                        Read more
+                        <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180 group-hover:translate-x-1 transition-transform" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="bg-gray-50 dark:bg-gray-800">
+        <div class="py-8 sm:py-12 lg:py-16 px-4 sm:px-6 mx-auto max-w-screen-xl">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
+                <div class="feature-card bg-gradient-to-br from-green-200 to-green-300 dark:from-green-800 dark:to-green-900 border border-green-300 dark:border-gray-700 rounded-lg p-6 sm:p-8 md:p-12 text-center">
+                    <h2 class="text-gray-900 dark:text-white text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2">10,000+</h2>
+                    <p class="text-gray-700 dark:text-gray-300 text-base sm:text-lg font-semibold">Hectares monitored</p>
+                </div>
+                
+                <div class="feature-card bg-gradient-to-br from-green-200 to-green-300 dark:from-green-800 dark:to-green-900 border border-green-300 dark:border-gray-700 rounded-lg p-6 sm:p-8 md:p-12 text-center">
+                    <h2 class="text-gray-900 dark:text-white text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2">+20%</h2>
+                    <p class="text-gray-700 dark:text-gray-300 text-base sm:text-lg font-semibold">Income increase</p>
+                </div>
+                
+                <div class="feature-card bg-gradient-to-br from-green-200 to-green-300 dark:from-green-800 dark:to-green-900 border border-green-300 dark:border-gray-700 rounded-lg p-6 sm:p-8 md:p-12 text-center sm:col-span-2 lg:col-span-1">
+                    <h2 class="text-gray-900 dark:text-white text-3xl sm:text-4xl md:text-5xl font-extrabold mb-2">15%</h2>
+                    <p class="text-gray-700 dark:text-gray-300 text-base sm:text-lg font-semibold">Reduced food waste</p>
+                </div>
+            </div>
+            
+            <!-- Info Card -->
+            <a href="{{ route('login') }}" class="flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-xl md:flex-row md:max-w-screen-xl dark:border-gray-700 dark:bg-gray-900 dark:hover:bg-gray-800 transition-all duration-300 overflow-hidden">
+                <img class="object-cover w-full h-64 md:h-auto md:w-56 lg:w-72 rounded-t-lg md:rounded-none md:rounded-l-lg" src="{{ asset('images/irrigation-stock.jpg') }}" alt="Agriculture" loading="lazy"/>
+                <div class="flex flex-col justify-between p-6 sm:p-8 leading-normal">
+                    <h5 class="mb-3 text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Data-Driven Accuracy</h5>
+                    <p class="mb-3 text-sm sm:text-base font-normal text-gray-700 dark:text-gray-400">
+                        Our models are trained on 10+ years of regional data, achieving over 90% accuracy in trend forecasting for key highland vegetables. This ensures reliable predictions for better farming decisions.
+                    </p>
+                    <span class="inline-flex items-center text-blue-600 dark:text-blue-500 hover:underline font-medium">
+                        Learn more
+                        <svg class="w-4 h-4 ms-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+                        </svg>
+                    </span>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+        <div class="mx-auto w-full max-w-screen-xl p-4 sm:p-6 py-6 sm:py-8">
+            <div class="md:flex md:justify-between gap-8">
+                <div class="mb-6 md:mb-0 md:max-w-md">
+                    <a href="{{ url('/') }}" class="flex items-center space-x-2 mb-4">
+                        <img src="{{ asset('images/PASYA.png') }}" class="h-8 sm:h-10" alt="PASYA Logo" />
+                        <img src="{{ asset('images/title.png') }}" class="h-8 sm:h-10" alt="PASYA Title"/>
+                    </a>
+                    <p class="mt-4 text-sm sm:text-base text-gray-500 dark:text-gray-400">
+                        Empowering Benguet farmers with data-driven insights for sustainable agriculture and improved yields.
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 gap-6 sm:gap-8 sm:grid-cols-3">
+                    <div>
+                        <h2 class="mb-4 text-sm font-semibold text-gray-900 uppercase dark:text-white">Resources</h2>
+                        <ul class="text-gray-500 dark:text-gray-400 font-medium space-y-2">
+                            <li>
+                                <a href="#" class="hover:underline hover:text-gray-900 dark:hover:text-white transition-colors">Documentation</a>
+                            </li>
+                            <li>
+                                <a href="#" class="hover:underline hover:text-gray-900 dark:hover:text-white transition-colors">API</a>
+                            </li>
+                            <li>
+                                <a href="#" class="hover:underline hover:text-gray-900 dark:hover:text-white transition-colors">Guides</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h2 class="mb-4 text-sm font-semibold text-gray-900 uppercase dark:text-white">Follow us</h2>
+                        <ul class="text-gray-500 dark:text-gray-400 font-medium space-y-2">
+                            <li>
+                                <a href="#" class="hover:underline hover:text-gray-900 dark:hover:text-white transition-colors">Facebook</a>
+                            </li>
+                            <li>
+                                <a href="#" class="hover:underline hover:text-gray-900 dark:hover:text-white transition-colors">Twitter</a>
+                            </li>
+                            <li>
+                                <a href="#" class="hover:underline hover:text-gray-900 dark:hover:text-white transition-colors">LinkedIn</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h2 class="mb-4 text-sm font-semibold text-gray-900 uppercase dark:text-white">Legal</h2>
+                        <ul class="text-gray-500 dark:text-gray-400 font-medium space-y-2">
+                            <li>
+                                <a href="#" class="hover:underline hover:text-gray-900 dark:hover:text-white transition-colors">Privacy Policy</a>
+                            </li>
+                            <li>
+                                <a href="#" class="hover:underline hover:text-gray-900 dark:hover:text-white transition-colors">Terms &amp; Conditions</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-6 border-gray-200 dark:border-gray-700" />
+            <div class="sm:flex sm:items-center sm:justify-between">
+                <span class="text-sm text-gray-500 dark:text-gray-400">© 2025 <a href="{{ url('/') }}" class="hover:underline">PASYA™</a>. All Rights Reserved.</span>
+                <div class="flex mt-4 space-x-5 sm:justify-center sm:mt-0">
+                    <a href="#" class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" />
+                        </svg>
+                        <span class="sr-only">Facebook page</span>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+                        </svg>
+                        <span class="sr-only">Twitter page</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="bg-white dark:bg-gray-900">
+        <div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
+            <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12 mb-8">
+                <h1 class="text-gray-900 dark:text-white text-3xl md:text-5xl font-extrabold mb-2">
+                    Where Tradition Meets Technology: Data-Driven Farming for Benguet's Future
+                </h1>
+            </div>
+            
+            <!-- Features Grid -->
+            <div id="features" class="grid md:grid-cols-2 gap-8 mb-8">
+                <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12">
+                    <h2 class="text-gray-900 dark:text-white text-3xl font-extrabold mb-2">Crop Prediction Dashboard</h2>
+                    <p class="text-lg font-normal text-gray-500 dark:text-gray-400 mb-4">
+                        Visual forecasts of crop yields based on historical and seasonal data
+                    </p>
+                    <a href="{{ route('login') }}" class="text-blue-600 dark:text-blue-500 hover:underline font-medium text-lg inline-flex items-center">
+                        Read more
+                        <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                        </svg>
+                    </a>
+                </div>
+                
+                <div class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12">
+                    <h2 class="text-gray-900 dark:text-white text-3xl font-extrabold mb-2">Seasonal Trend Analysis</h2>
+                    <p class="text-lg font-normal text-gray-500 dark:text-gray-400 mb-4">
+                        Insights on optimal planting and harvesting periods
+                    </p>
+                    <a href="{{ route('login') }}" class="text-blue-600 dark:text-blue-500 hover:underline font-medium text-lg inline-flex items-center">
+                        Read more
+                        <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="bg-white dark:bg-gray-900">
+        <div class="py-8 px-4 mx-auto max-w-screen-xl lg:py-16">
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div class="bg-green-200 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12 text-center">
+                    <h2 class="text-gray-900 dark:text-white text-3xl md:text-4xl font-extrabold mb-2">10,000+</h2>
+                    <p class="text-gray-700 dark:text-gray-300 text-lg">Hectares monitored</p>
+                </div>
+                
+                <div class="bg-green-200 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12 text-center">
+                    <h2 class="text-gray-900 dark:text-white text-3xl md:text-4xl font-extrabold mb-2">+20%</h2>
+                    <p class="text-gray-700 dark:text-gray-300 text-lg">Income increase</p>
+                </div>
+                
+                <div class="bg-green-200 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 md:p-12 text-center">
+                    <h2 class="text-gray-900 dark:text-white text-3xl md:text-4xl font-extrabold mb-2">15%</h2>
+                    <p class="text-gray-700 dark:text-gray-300 text-lg">Reduced food waste</p>
+                </div>
+            </div>
+            
+            <!-- Info Card -->
+            <a href="{{ route('login') }}" class="flex flex-col items-center bg-white border border-gray-200 rounded-lg shadow hover:bg-gray-100 md:flex-row md:max-w-screen-xl dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700">
+                <img class="object-cover w-full rounded-t-lg h-96 md:h-auto md:w-48 md:rounded-none md:rounded-s-lg" src="{{ asset('images/irrigation-stock.jpg') }}" alt="Agriculture"/>
+                <div class="flex flex-col justify-between p-6 leading-normal">
+                    <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Data-Driven Accuracy</h5>
+                    <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">
+                        Our models are trained on 10+ years of regional data, achieving over 90% accuracy in trend forecasting for key highland vegetables
+                    </p>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+        <div class="mx-auto w-full max-w-screen-xl p-6 py-8">
+            <div class="md:flex md:justify-between">
+                <div class="mb-6 md:mb-0">
+                    <a href="{{ url('/') }}" class="flex items-center space-x-2">
+                        <img src="{{ asset('images/PASYA.png') }}" class="h-12" alt="PASYA Logo" />
+                        <img src="{{ asset('images/title.png') }}" class="h-12" alt="PASYA Title"/>
+                    </a>
+                    <p class="mt-4 text-sm text-gray-500 dark:text-gray-400 max-w-md">
+                        Empowering Benguet farmers with data-driven insights for sustainable agriculture and improved yields.
+                    </p>
+                </div>
+                <div class="grid grid-cols-2 gap-8 sm:gap-6 sm:grid-cols-3">
+                    <div>
+                        <h2 class="mb-4 text-sm font-semibold text-gray-900 uppercase dark:text-white">Resources</h2>
+                        <ul class="text-gray-500 dark:text-gray-400 font-medium">
+                            <li class="mb-2">
+                                <a href="#" class="hover:underline">Documentation</a>
+                            </li>
+                            <li>
+                                <a href="#" class="hover:underline">API</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h2 class="mb-4 text-sm font-semibold text-gray-900 uppercase dark:text-white">Follow us</h2>
+                        <ul class="text-gray-500 dark:text-gray-400 font-medium">
+                            <li class="mb-2">
+                                <a href="#" class="hover:underline">Facebook</a>
+                            </li>
+                            <li>
+                                <a href="#" class="hover:underline">Twitter</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h2 class="mb-4 text-sm font-semibold text-gray-900 uppercase dark:text-white">Legal</h2>
+                        <ul class="text-gray-500 dark:text-gray-400 font-medium">
+                            <li class="mb-2">
+                                <a href="#" class="hover:underline">Privacy Policy</a>
+                            </li>
+                            <li>
+                                <a href="#" class="hover:underline">Terms &amp; Conditions</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-6 border-gray-200 dark:border-gray-700" />
+            <div class="sm:flex sm:items-center sm:justify-between">
+                <span class="text-sm text-gray-500 dark:text-gray-400">© 2025 <a href="{{ url('/') }}" class="hover:underline">PASYA™</a>. All Rights Reserved.</span>
+                <div class="flex mt-4 space-x-5 sm:justify-center sm:mt-0">
+                    <a href="#" class="text-gray-500 hover:text-gray-900 dark:hover:text-white">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clip-rule="evenodd" />
+                        </svg>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-gray-900 dark:hover:text-white">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const navbarToggle = document.querySelector('[data-collapse-toggle="navbar-sticky"]');
+        const navbar = document.getElementById('navbar-sticky');
+        
+        if (navbarToggle && navbar) {
+            navbarToggle.addEventListener('click', () => {
+                navbar.classList.toggle('hidden');
+            });
+        }
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Crop;
 use App\Models\Farmer;
 use App\Services\CropImportExportService;
+use App\Jobs\ProcessCropImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class CropController extends Controller
@@ -528,58 +531,54 @@ class CropController extends Controller
     }
 
     /**
-     * Import crops from CSV
+     * Import crops from CSV/Excel (Queue-based for better performance)
      */
     public function import(Request $request, CropImportExportService $service)
     {
         \Log::info('Import method reached - START');
         
-        // Set higher limits for large file processing
-        ini_set('max_execution_time', 600); // 10 minutes
-        ini_set('memory_limit', '512M'); // Increase memory limit
-        
         try {
-            \Log::info('Import method called', [
-                'is_ajax' => $request->ajax(),
-                'expects_json' => $request->expectsJson(),
-                'has_file' => $request->hasFile('csv_file'),
-                'file_name' => $request->file('csv_file') ? $request->file('csv_file')->getClientOriginalName() : 'no file',
-                'file_extension' => $request->file('csv_file') ? $request->file('csv_file')->getClientOriginalExtension() : 'no extension',
-                'file_size' => $request->file('csv_file') ? $request->file('csv_file')->getSize() : 0,
-                'all_files' => array_keys($request->allFiles()),
-                'request_method' => $request->method(),
-                'content_type' => $request->header('Content-Type')
-            ]);
-            
             $request->validate([
-                'csv_file' => 'required|file|mimes:csv,txt,xlsx,xls|max:102400' // 100MB limit for large files
+                'csv_file' => 'required|file|mimes:csv,txt,xlsx,xls|max:102400' // 100MB limit
             ]);
-
-            \Log::info('Validation passed');
 
             $file = $request->file('csv_file');
-            $extension = $file->getClientOriginalExtension();
             $fileSize = $file->getSize();
+            $fileSizeMB = round($fileSize / 1024 / 1024, 2);
             $isLargeFile = $fileSize > 5 * 1024 * 1024; // 5MB threshold
             
             \Log::info('Processing file', [
-                'extension' => $extension,
-                'file_size' => $fileSize,
-                'is_large_file' => $isLargeFile,
-                'will_use_excel' => in_array($extension, ['xlsx', 'xls'])
+                'file_name' => $file->getClientOriginalName(),
+                'file_size_mb' => $fileSizeMB,
+                'is_large_file' => $isLargeFile
             ]);
             
-            // For large files, provide additional feedback
-            if ($isLargeFile && ($request->expectsJson() || $request->ajax())) {
-                // Send immediate response for large files
+            // For large files, use queue-based processing
+            if ($isLargeFile) {
+                // Store file temporarily
+                $jobId = Str::uuid()->toString();
+                $tempPath = $file->storeAs('temp-imports', $jobId . '.' . $file->getClientOriginalExtension());
+                $fullPath = storage_path('app/' . $tempPath);
+                
+                // Calculate median values for the job
+                $medianValues = $this->calculateMedianValues();
+                
+                // Dispatch queue job
+                ProcessCropImport::dispatch($fullPath, Auth::id(), $jobId, $medianValues);
+                
+                \Log::info('Large file queued for processing', ['job_id' => $jobId]);
+                
                 return response()->json([
                     'success' => true,
-                    'message' => 'Large file detected. Processing in the background. This may take several minutes...',
-                    'processing' => true
+                    'message' => "Large file ({$fileSizeMB}MB) is being processed in the background. You can continue working while import completes.",
+                    'job_id' => $jobId,
+                    'is_queued' => true
                 ]);
             }
             
-            // Handle different file types
+            // For small files, process immediately with optimized chunking
+            $extension = $file->getClientOriginalExtension();
+            
             if (in_array($extension, ['xlsx', 'xls'])) {
                 $results = $service->importFromExcel($file);
             } else {
@@ -588,29 +587,27 @@ class CropController extends Controller
 
             \Log::info('Import results', [
                 'success_count' => $results['success'],
-                'error_count' => $results['errors'],
-                'messages' => $results['messages'] ?? []
+                'error_count' => $results['errors']
             ]);
             
             $message = "Import completed: {$results['success']} successful, {$results['errors']} errors.";
             
             if (!empty($results['messages'])) {
-                $message .= "\n\nDetails:\n" . implode("\n", $results['messages']);
+                $message .= "\n\nDetails:\n" . implode("\n", array_slice($results['messages'], 0, 10));
+                if (count($results['messages']) > 10) {
+                    $message .= "\n... and " . (count($results['messages']) - 10) . " more messages.";
+                }
             }
 
-            // Return JSON response for AJAX requests
             if ($request->expectsJson() || $request->ajax()) {
-                if ($results['errors'] > 0) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $message
-                    ], 422);
-                }
-                
                 return response()->json([
-                    'success' => true,
-                    'message' => $message
-                ]);
+                    'success' => $results['errors'] === 0,
+                    'message' => $message,
+                    'stats' => [
+                        'success' => $results['success'],
+                        'errors' => $results['errors']
+                    ]
+                ], $results['errors'] > 0 ? 422 : 200);
             }
 
             if ($results['errors'] > 0) {
@@ -629,6 +626,85 @@ class CropController extends Controller
             }
             throw $e;
         }
+    }
+
+    /**
+     * Check import progress for queued jobs
+     */
+    public function importProgress(Request $request)
+    {
+        $jobId = $request->get('job_id');
+        
+        if (!$jobId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Job ID is required'
+            ], 400);
+        }
+        
+        $progress = Cache::get("import_progress_{$jobId}");
+        
+        if (!$progress) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Import progress not found. Job may have expired.'
+            ], 404);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'progress' => $progress
+        ]);
+    }
+
+    /**
+     * Calculate median values for data imputation
+     */
+    private function calculateMedianValues(): array
+    {
+        $existingCrops = Crop::whereNotNull('area_planted')
+            ->whereNotNull('area_harvested')
+            ->whereNotNull('production_mt')
+            ->whereNotNull('productivity_mt_ha')
+            ->where('area_planted', '>', 0)
+            ->where('area_harvested', '>', 0)
+            ->where('production_mt', '>', 0)
+            ->where('productivity_mt_ha', '>', 0)
+            ->get();
+
+        if ($existingCrops->count() > 0) {
+            return [
+                'area_planted' => $this->calculateMedian($existingCrops->pluck('area_planted')->sort()->values()->toArray()),
+                'area_harvested' => $this->calculateMedian($existingCrops->pluck('area_harvested')->sort()->values()->toArray()),
+                'production' => $this->calculateMedian($existingCrops->pluck('production_mt')->sort()->values()->toArray()),
+                'productivity' => $this->calculateMedian($existingCrops->pluck('productivity_mt_ha')->sort()->values()->toArray()),
+            ];
+        }
+
+        // Fallback defaults
+        return [
+            'area_planted' => 1.5,
+            'area_harvested' => 1.4,
+            'production' => 12.0,
+            'productivity' => 8.5
+        ];
+    }
+
+    /**
+     * Calculate median from array
+     */
+    private function calculateMedian(array $values): float
+    {
+        $count = count($values);
+        if ($count === 0) return 0.0;
+        
+        sort($values, SORT_NUMERIC);
+        
+        if ($count % 2 === 0) {
+            return ($values[$count / 2 - 1] + $values[$count / 2]) / 2;
+        }
+        
+        return $values[floor($count / 2)];
     }
 
     /**

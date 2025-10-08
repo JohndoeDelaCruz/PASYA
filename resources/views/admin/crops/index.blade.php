@@ -380,7 +380,25 @@
                                             </svg>
                                         </th>
                                         <th class="px-4 py-4 text-left text-sm font-medium text-gray-600 cursor-pointer hover:text-gray-800">
+                                            Farm Type
+                                            <svg class="w-3 h-3 inline ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                                            </svg>
+                                        </th>
+                                        <th class="px-4 py-4 text-left text-sm font-medium text-gray-600 cursor-pointer hover:text-gray-800">
                                             Area Planted (ha)
+                                            <svg class="w-3 h-3 inline ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                                            </svg>
+                                        </th>
+                                        <th class="px-4 py-4 text-left text-sm font-medium text-gray-600 cursor-pointer hover:text-gray-800">
+                                            Area Harvested (ha)
+                                            <svg class="w-3 h-3 inline ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
+                                            </svg>
+                                        </th>
+                                        <th class="px-4 py-4 text-left text-sm font-medium text-gray-600 cursor-pointer hover:text-gray-800">
+                                            Production (mt)
                                             <svg class="w-3 h-3 inline ml-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path>
                                             </svg>
@@ -405,6 +423,7 @@
                                             data-crop="{{ strtolower($crop->crop_name ?? $crop->name ?? '') }}"
                                             data-municipality="{{ strtolower($crop->municipality ?? '') }}"
                                             data-year="{{ $crop->year ?? '' }}"
+                                            data-farm-type="{{ strtolower($crop->farm_type ?? '') }}"
                                             data-crop-id="{{ $crop->id }}">
                                             <td class="px-4 py-4">
                                                 <input type="checkbox" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 row-checkbox">
@@ -419,7 +438,16 @@
                                                 {{ $crop->year ?? ($crop->planting_date ? $crop->planting_date->format('Y') : 'N/A') }}
                                             </td>
                                             <td class="px-4 py-4 text-sm text-gray-700">
+                                                {{ $crop->farm_type ?? 'N/A' }}
+                                            </td>
+                                            <td class="px-4 py-4 text-sm text-gray-700">
                                                 {{ $crop->area_planted ? number_format($crop->area_planted, 1) : ($crop->area_hectares ? number_format($crop->area_hectares, 1) : 'N/A') }}
+                                            </td>
+                                            <td class="px-4 py-4 text-sm text-gray-700">
+                                                {{ $crop->area_harvested ? number_format($crop->area_harvested, 1) : 'N/A' }}
+                                            </td>
+                                            <td class="px-4 py-4 text-sm text-gray-700">
+                                                {{ $crop->production_mt ? number_format($crop->production_mt, 1) : 'N/A' }}
                                             </td>
                                             <td class="px-4 py-4 text-sm text-gray-700">
                                                 {{ $crop->productivity_mt_ha ? number_format($crop->productivity_mt_ha, 4) : 'N/A' }}
@@ -453,7 +481,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                                            <td colspan="9" class="px-6 py-12 text-center text-gray-500">
                                                 @if(request()->hasAny(['search', 'municipality', 'crop']))
                                                     <svg class="w-12 h-12 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -2087,6 +2115,7 @@
             newRow.setAttribute('data-crop', (crop.crop_name || crop.name || '').toLowerCase());
             newRow.setAttribute('data-municipality', (crop.municipality || '').toLowerCase());
             newRow.setAttribute('data-year', crop.year || '');
+            newRow.setAttribute('data-farm-type', (crop.farm_type || '').toLowerCase());
             
             newRow.innerHTML = `
                 <td class="px-4 py-4">
@@ -2100,6 +2129,9 @@
                 </td>
                 <td class="px-4 py-4 text-sm text-gray-700">
                     ${crop.year || 'N/A'}
+                </td>
+                <td class="px-4 py-4 text-sm text-gray-700">
+                    ${crop.farm_type || 'N/A'}
                 </td>
                 <td class="px-4 py-4 text-sm text-gray-700">
                     ${crop.area_planted ? parseFloat(crop.area_planted).toFixed(1) : (crop.area_hectares ? parseFloat(crop.area_hectares).toFixed(1) : 'N/A')}

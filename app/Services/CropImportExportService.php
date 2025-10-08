@@ -258,7 +258,7 @@ class CropImportExportService
         ]);
         
         // Process in chunks for better performance and memory usage
-        $chunkSize = 500; // Process 500 rows at a time
+        $chunkSize = 5000; // Process 5000 rows at a time
         $chunk = [];
         $rowNumber = 2; // Start from row 2 (after headers)
         
@@ -718,9 +718,22 @@ class CropImportExportService
      */
     protected function prepareCsvRowNewFormat(array $rowData, int $rowNumber): ?array
     {
-        // Handle farm_type with default
+        // Handle farm_type with default - normalize to lowercase
         $farmType = strtolower(trim($rowData['farm_type'] ?? $rowData['farmtype'] ?? ''));
-        if (empty($farmType) || $farmType === 'null' || $farmType === 'n/a') {
+        
+        // Normalize common variations
+        $farmTypeMap = [
+            'irrigated' => 'irrigated',
+            'rainfed' => 'rainfed',
+            'upland' => 'upland',
+            'lowland' => 'lowland',
+            'rain fed' => 'rainfed',
+            'rain-fed' => 'rainfed',
+        ];
+        
+        if (isset($farmTypeMap[$farmType])) {
+            $farmType = $farmTypeMap[$farmType];
+        } elseif (empty($farmType) || $farmType === 'null' || $farmType === 'n/a') {
             $farmType = 'rainfed'; // Default to rainfed as it's most common
         }
         
